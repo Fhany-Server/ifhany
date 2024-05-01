@@ -1,0 +1,67 @@
+{
+    "compilerOptions": {
+        "target": "ESNext",
+        "module": "commonjs",
+        "strict": true,
+        "sourceMap": true,
+        "noImplicitAny": true,
+        "noEmitOnError": false,
+        "isolatedModules": true,
+        "esModuleInterop": true,
+        "moduleResolution": "Node",
+        "resolveJsonModule": true,
+        "downlevelIteration": true,
+        "allowSyntheticDefaultImports": true,
+        "baseUrl": ".",
+        "outDir": "dist",
+        "types": [
+            "jest"
+        ],
+        "paths": {
+            "//*": [
+                "src/*"
+            ],
+            "@/*": [
+                "src/lib/*"
+            ],
+            ">/*": [
+                "src/commands/*"
+            ],
+            "$/": [
+                "data/*"
+            ],
+            "D/*": [
+                "data/default/*"
+            ],
+            "T/*": [
+                "__tests__/*"
+            ],
+            "L/*": [
+                "logs/*"
+            ]
+        }
+    },
+    "tsc-alias": {
+        "transform": "js",
+        "format": "commonjs"
+    },
+    "typeRoots": [
+        "./src/types/",
+        "./node_modules/@types/jest/"
+    ],
+    "include": [
+        "__tests__/**/**.ts",
+        "src/**/*.ts",
+        "src/types/**/*.d.ts",
+        "configs.json",
+        "data/default/**/**.json"
+    ],
+    "exclude": [
+        "node_modules"
+    ],
+    "ts-node": {
+        "esm": true,
+        "swc": true
+    },
+    "extends": "@tsconfig/node16/tsconfig.json"
+}

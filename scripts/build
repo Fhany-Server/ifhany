@@ -1,0 +1,20 @@
+#!/bin/bash
+
+clean_dist() {
+	if [ "$(find "dist" -maxdepth 1 -type f | wc -l)" -gt 0  ]; then
+		yarn build-cl
+	fi
+}
+
+if [[ "$1" != "--no-clean" ]]; then
+	clean_dist
+fi
+
+# Install Dependencies
+yarn install
+
+# Copy Other Data
+npx tsc && npx tsc-alias --resolve-full-paths
+
+# Fix Tests Compilation
+rm -rf dist/__tests__
