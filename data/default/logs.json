@@ -1,0 +1,33 @@
+{
+    "errors": {
+        "loadCommands": "Não foi possível carregar os comandos!",
+        "notCommandExportsRequired": "Tem angu nesse caroço em... O arquivo não tem as exportações necessárias!\n   >>> ${path} <<<"
+    },
+    "success": {
+        "client": "Estamos à todo vapor! Logado em ${name} (v${version})",
+        "definedCommand": "C-- Comando ${commandName} definido com sucesso!",
+        "definedCommandWithSubCommands": "C-- Comando ${commandName} definido com sucesso junto com os subcomandos:\n    ${subcommands} (${subcommands.length})",
+        "refreshGlobalCommands": "Boa! ${count} comandos globais foram carregados!",
+        "refreshGuildCommands": "Boa! ${count} comandos da guilda ${name} foram carregados!",
+        "endOfMain": "Função main finalizada!"
+    },
+    "loading": {
+        "refreshCommands": "Atualizando ${commandsLength} comandos... (/)"
+    },
+    "warn": {
+        "messageContent": "O usuário ${user} não respondeu ao report!",
+        "emptyJSON": "O JSON acessado em ${path} não tem conteúdo algum!\nEscrevendo um JSON vazio válido..."
+    },
+    "espec": {
+        "listeners": {
+            "listenerLoaded": "L-- O Listener ${name} foi chamado com sucesso!",
+            "oncheListenrLoaded": "L-- O Listener de interação única ${name} foi chamado com sucesso!"
+        },
+        "fshandling": {
+            "subPresetNotFound": "FS-- O preset ${subPresetName} não foi encontrado!"
+        }
+    },
+    "interaction": {
+        "usedCommand": "I-- O usuário ${user} usou o comando ${commandName}!"
+    }
+}

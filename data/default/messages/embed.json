@@ -1,0 +1,140 @@
+{
+    "baseProperties": {
+        "color": "${color}",
+        "timestamp": "${date}",
+        "footer": {
+            "text": "${authorUsername}",
+            "iconURL": "${authorURL}"
+        }
+    },
+    "reportEmbed": {
+        "title": "Denúncia",
+        "description": "${description}\n\n*Ei... Aqui está um atalho para a [mensagem](${reportedMessageLink})!*",
+        "color": "#ff2020",
+        "author": {
+            "name": "${fullReportedUser}",
+            "iconURL": "${reportedAvatar}"
+        },
+        "fields": [
+            {
+                "name": "Usuário Reportado",
+                "value": "**${fullReportedUser}** (*${reported.id}*)",
+                "inline": true
+            },
+            {
+                "name": "Usuário Delator",
+                "value": "**${fullReporterUser}** (*${reporter.id}*)",
+                "inline": true
+            }
+        ],
+        "thumbnail": {
+            "url": "${reportedAvatar}"
+        },
+        "timestamp": "${date}",
+        "footer": {
+            "text": "${fullReporterUser}",
+            "iconURL": "${reporterAvatar}"
+        }
+    },
+    "listEmbed": {
+        "title": "Presets Disponíveis",
+        "description": "Aqui estão os presets existentes de autoreport!\n\n",
+        "color": "#00ffff",
+        "fields": [],
+        "timestamp": "${date}",
+        "footer": {
+            "text": "${authorUsername}",
+            "iconURL": "${authorURL}"
+        }
+    },
+    "warn": {
+        "missingPermission": {
+            "title": "Acesso negado.",
+            "description": "Você não tem o cargo necessário para usar este comando!",
+            "color": "#ff0000",
+            "timestamp": "${date}",
+            "footer": {
+                "text": "${authorUsername}",
+                "iconURL": "${authorURL}"
+            }
+        }
+    },
+    "moveContent": {
+        "confirmAction": {
+            "title": "Confirmação",
+            "description": ":warning: | **Você tem certeza que deseja fazer isso?**\n*Este comando irá mover todo o conteúdo (imagens e vídeos) do chat\n ${originChat} para o chat ${destinationChat}!*",
+            "color": "#ffff00",
+            "timestamp": "${date}",
+            "footer": {
+                "text": "${authorUsername}",
+                "iconURL": "${authorURL}"
+            }
+        },
+        "canceledAction": {
+            "title": "Cancelado!",
+            "description": "Às suas ordens! Não farei nada :) ~~ou não... ks ks >:)~~",
+            "color": "#00ff00",
+            "timestamp": "${date}",
+            "footer": {
+                "text": "${authorUsername}",
+                "iconURL": "${authorURL}"
+            }
+        },
+        "generalBaseInformation": {
+            "title": "Iniciando...",
+            "description": "O trabalho está sendo feito!\nTome um chá, relaxe e aguarde até que eu te mencione novamente :)\n\n:arrow_forward: | **Calcular o total de mensagens**\n:ballot_box_with_check: | *Calcular o total de mensagens com arquivos*\n:ballot_box_with_check: | *Calcular o total de arquivos*\n:ballot_box_with_check: | *Calcular o total de lotes e o tempo aproximado*\n:ballot_box_with_check: | *Baixar e enviar em lotes*",
+            "color": "0099ff",
+            "timestamp": "${date}",
+            "footer": {
+                "text": "${authorUsername}",
+                "iconURL": "${authorURL}"
+            }
+        }
+    },
+    "errors": {
+        "emojiNotFound": {
+            "title": "Emoji não encontrado!",
+            "description": "O emoji **${emojiName}** não foi encontrado no servidor!",
+            "color": "#ff0000"
+        }
+    },
+    "presetDialog": {
+        "err": {
+            "presetAlreadyExists": {
+                "title": "Nome do Preset",
+                "description": "O preset com o nome **${presetName}** já existe para este comando! Tente outro!",
+                "color": "#ff0000"
+            },
+            "tooManyAttempts": {
+                "title": "Número de tentativas excedido!",
+                "description": "Você ultrapassou o limite de tentativas. Tente novamente mais tarde ou avise caso exista algum erro!",
+                "color": "#ff0000"
+            }
+        },
+        "actionDialog": {
+            "title": "Ações do Gerenciador de Presets",
+            "description": "Que tipo de ação você deseja tomar nos presets do comando **${commandName}**?\n"
+        },
+        "successDialog": {
+            "title": "Gerenciador de Presets",
+            "description": "Parabéns! Você concluiu a alteração nos presets do comando **${commandName}**!\n",
+            "color": "00ff00"
+        },
+        "presetNameDialog": {
+            "title": "Nome do Preset",
+            "description": "Escreva no chat o nome do preset que você quer criar para **${commandLabel}**!\n\n:warning: | *O nome do preset deve ser único para este comando!*"
+        },
+        "optionsDialog": {
+            "title": "Escolha uma opção!",
+            "description": "${description}"
+        },
+        "channelsDialog": {
+            "title": "Escolha um canal!",
+            "description": "${description}"
+        },
+        "getEmojiQuestion": {
+            "title": "Escolha um emoji!",
+            "description": "Escolha um emoji para o preset que você quer criar!\n\n:warning: | *O emoji do preset deve ser específico para este comando!*"
+        }
+    }
+}

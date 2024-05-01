@@ -1,0 +1,151 @@
+/** @format */
+//#region           External Modules
+import { promisify } from "util";
+import { Ok } from "ts-results";
+import {
+    User,
+    DiscordAPIError,
+    MessageReaction,
+    MessageCollectorOptions,
+    AwaitReactionsOptions,
+    Message,
+    MessagePayload,
+    Collection,
+} from "discord.js";
+//#endregion
+//#region           Modules
+import { Err, ErrorKind, ErrorOrigin } from "@/system/handlers/errHandlers";
+//#endregion
+//#region           Types
+export namespace types {
+    export type UtilsFunctions = {
+        verifyIfDMIsOpened: (
+            message: string | MessagePayload
+        ) => Promise<Ok<Message>>;
+    };
+
+    export type DMResponse =
+        | Collection<string, Message<boolean>>
+        | "canceled"
+        | "dmclosed"
+        | "timeisover";
+}
+//#endregion
+//#region           Variables
+const dmClosedWarn = "O usuário não tem a DM aberta.";
+//#endregion
+//#region           Implementation
+export class DMDialog {
+    private readonly cancelEmoji: string;
+
+    user: User;
+    wasClosed: boolean;
+    context: MessageReaction; //! TEMP
+
+    constructor(user: User, context: MessageReaction) {
+        this.cancelEmoji = "⛔";
+
+        this.user = user;
+        this.context = context;
+        this.wasClosed = false;
+    }
+
+    private Utils(): types.UtilsFunctions {
+        const factory: FactoryObj<types.UtilsFunctions> = {
+            verifyIfDMIsOpened: async (message) => {
+                try {
+                    var messageSent = await this.user.send(message);
+                } catch (err) {
+                    if (err instanceof DiscordAPIError) {
+                        const dmWarn = await this.context.message.channel.send({
+                            content: `Ei! Você precisa ter a DM aberta.\n\n||${this.user}||`,
+                        });
+
+                        const timeOut = promisify(setTimeout);
+
+                        await timeOut(3000);
+
+                        dmWarn.delete();
+
+                        throw new Err({
+                            message: dmClosedWarn,
+                            origin: ErrorOrigin.User,
+                            kind: ErrorKind.BlockedAction,
+                        });
+                    } else {
+                        throw new Err({
+                            message:
+                                "Ocorreu um problema ao enviar a mensagem!",
+                            origin: ErrorOrigin.Unknown,
+                            kind: ErrorKind.Other,
+                            errObj: err,
+                        });
+                    }
+                }
+
+                return Ok(messageSent);
+            },
+        };
+
+        return factory;
+    }
+
+    public async SingleAnswer(
+        message: string,
+        timeout?: number
+    ): Promise<Ok<types.DMResponse>> {
+        // Check and create the initial message
+        try {
+            var messageSent: Message = (
+                await this.Utils().verifyIfDMIsOpened(message)
+            ).val;
+
+            // Add reaction
+            await messageSent.react(this.cancelEmoji);
+        } catch (err) {
+            if (err instanceof Err) {
+                if (err.val.message === dmClosedWarn) return new Ok("dmclosed");
+            } else {
+                throw err;
+            }
+        }
+
+        const cancelOptions: AwaitReactionsOptions = {
+            max: 2,
+            filter: (reaction) => reaction.emoji.name === this.cancelEmoji,
+        };
+        const messageOptions: MessageCollectorOptions = {
+            filter: (m) => m.author.id === this.user.id,
+            max: 1,
+        };
+
+        return new Promise((resolve) => {
+            const finish = (result: types.DMResponse): void => {
+                this.wasClosed = true;
+                resolve(Ok(result));
+                return void 0;
+            };
+
+            // Listen to cancel option
+            messageSent.awaitReactions(cancelOptions).then(async (collection) => {
+                finish("canceled");
+
+                return void 0;
+            });
+
+            // Listen to response
+            messageSent.channel
+                .awaitMessages(messageOptions)
+                .then(async (response) => {
+                    finish(response);
+                });
+
+            // Finish it if time is over
+            if (timeout)
+                setTimeout(() => {
+                    finish("timeisover");
+                }, timeout);
+        });
+    }
+}
+//#endregion

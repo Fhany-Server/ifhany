@@ -1,0 +1,44 @@
+{
+    "handlers": {
+        "preset": {
+            "errors": {
+                "presetNotFound": "O preset \"**${subPresetName}**\" não existe!"
+            }
+        }
+    },
+    "commands": {
+        "pingMessage": "Pong! A latência é: ${latency}ms!\n E o ping do WebSocket (ou pong 2.0?...) é: ${ping}ms!",
+        "mod": {
+            "autoreport": {
+                "utils": {
+                    "success": {
+                        "createPreset": "O preset **${presetName}** foi criado com sucesso!"
+                    }
+                },
+                "sucess": {
+                    "presetEdited": "O preset **${presetName}** foi editado com sucesso!"
+                },
+                "warns": {
+                    "partialEditRemoval": "Você está tentando editar um preset que foi parcialmente removido! Presets que têm como começo \"old_\" foram arquivados e não podem ser alterados, apenas removidos.\n\n",
+                    "alreadyRemoved": "O preset **${presetName}** já foi removido!\n\n",
+                    "minimalOptionalParam": "Você precisa informar ao menos um parâmetro opcional para eu poder editar algo! >:("
+                },
+                "errors": {
+                    "invalidEmoji": "O emote ${receivedEmoji} não é válido!",
+                    "emojiNotFound": "O emote \"**${receivedEmoji}**\" não existe!"
+                },
+                "hints": {
+                    "howCanGetAvailablePresets": "*Você pode visualizar todos os presets disponíveis utilizando `/autoreport remove with-olds:true`!*",
+                    "emojiScapeChar": "*Dica: use `\\` antes do nome do emote!*",
+                    "partialEditRemoval": "*Você pode deletar o preset **${presetName}** com `/autoreport remove remove-previous: true` e criar um novo!*",
+                    "completelyRemoval": "*Você queria remover ele por completo? Adicione: `remove-previous: true` no comando!*"
+                }
+            },
+            "moveContent": {
+                "warns": {
+                    "wrongChatType": ":no_entry_sign: | **Ei!! Você não me enviou um chat válido.**\n:loudspeaker: | *Escolha um canal de texto (chat comum, tópico ou fórum) :)*"
+                }
+            }
+        }
+    }
+}
