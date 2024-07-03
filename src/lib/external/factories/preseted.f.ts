@@ -52,7 +52,7 @@ export namespace types {
                 params: {
                     action: AnyFunction;
                     actionParams: autoReportTypes.PresetParams;
-                    middleAction: reactTypes.MiddleAction
+                    middleAction: reactTypes.ActionBeforeReact
                 }
             ) => Promise<Ok<embedTypes.ReportReason | false>>;
         };
