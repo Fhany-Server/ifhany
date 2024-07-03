@@ -139,21 +139,6 @@ const Default: Factory<types.Functions> = () => {
                 kind: ErrorKind.NotFound,
             });
         },
-        findFilePath: async (folder, fileName, readdirOptions?) => {
-            const dirFiles = fs.readdir(folder, readdirOptions);
-
-            for (const file of await dirFiles) {
-                if (path.basename(file) === fileName) {
-                    return new Ok(`${folder}/${file}`);
-                }
-            }
-
-            throw new Err({
-                message: `File "${fileName}" not found!`,
-                origin: ErrorOrigin.Internal,
-                kind: ErrorKind.NotFound,
-            });
-        },
     };
     return factory;
 };

@@ -91,9 +91,7 @@ export namespace types {
     export type SubCommands = {
         new: (interaction: ChatInputCommandInteraction) => Promise<Ok<string>>;
         edit: (interaction: ChatInputCommandInteraction) => Promise<Ok<string>>;
-        rm: (
-            interaction: ChatInputCommandInteraction
-        ) => Promise<Ok<string>>;
+        rm: (interaction: ChatInputCommandInteraction) => Promise<Ok<string>>;
         list: (
             interaction: ChatInputCommandInteraction
         ) => Promise<Ok<string | APIEmbed>>;
@@ -302,40 +300,44 @@ export const action: types.actionFunction = async (params) => {
         var chat: TextBasedChannel;
 
         const getChat = await client.channels.fetch(params.chatID);
-        if (!getChat) {
-            throw new Err({
-                message: chatNotFound,
-                origin: ErrorOrigin.External,
-                kind: ErrorKind.NotFound,
-            });
-        }
-        if (getChat.isTextBased()) {
-            chat = getChat;
-        } else {
-            throw new Err({
-                message: wrongTypeErr,
-                origin: ErrorOrigin.User,
-                kind: ErrorKind.TypeError,
-            });
+        {
+            if (!getChat) {
+                throw new Err({
+                    message: chatNotFound,
+                    origin: ErrorOrigin.External,
+                    kind: ErrorKind.NotFound,
+                });
+            }
+            if (getChat.isTextBased()) {
+                chat = getChat;
+            } else {
+                throw new Err({
+                    message: wrongTypeErr,
+                    origin: ErrorOrigin.User,
+                    kind: ErrorKind.TypeError,
+                });
+            }
         }
 
         var logChat: TextBasedChannel;
         const getLogChat = await client.channels.fetch(params.logChatID);
-        if (!getLogChat) {
-            throw new Err({
-                message: chatNotFound,
-                origin: ErrorOrigin.External,
-                kind: ErrorKind.NotFound,
-            });
-        }
-        if (getLogChat.isTextBased()) {
-            logChat = getLogChat;
-        } else {
-            throw new Err({
-                message: wrongTypeErr,
-                origin: ErrorOrigin.User,
-                kind: ErrorKind.TypeError,
-            });
+        {
+            if (!getLogChat) {
+                throw new Err({
+                    message: chatNotFound,
+                    origin: ErrorOrigin.External,
+                    kind: ErrorKind.NotFound,
+                });
+            }
+            if (getLogChat.isTextBased()) {
+                logChat = getLogChat;
+            } else {
+                throw new Err({
+                    message: wrongTypeErr,
+                    origin: ErrorOrigin.User,
+                    kind: ErrorKind.TypeError,
+                });
+            }
         }
 
         var emoji: string | GuildEmoji;
@@ -363,64 +365,19 @@ export const action: types.actionFunction = async (params) => {
         };
     }
 
-    const middleActionOnFirstReaction: reactTypes.MiddleAction = async (
+    const middleActionOnFirstReaction: reactTypes.ActionBeforeReact = async (
         message
     ) => {
-        const DataHandler = new DataBowlHandler(commandName);
-
-        const oldMessages = (await DataHandler.Get(params.name)).val.object
-            .data.messages;
-
-        if (!Array.isArray(oldMessages))
-            throw new Err({
-                message: "The old messages array... Is not an array.",
-                origin: ErrorOrigin.Internal,
-                kind: ErrorKind.TypeError,
-            });
-
-        await DataHandler.Set(
-            params.name,
-            [...oldMessages, message.id],
-            "messages"
-        );
         const dataHandler = new DataBowlHandler(commandName);
 
-        // Escrita no arquivo de dados
-        {
-            // Adicionar no alreadyReported
-            const alreadyReported = (await dataHandler.Get(params.name)).val
-                .object.data.alreadyReported;
+        const oldMessages = (await dataHandler.Get(params.name)).val.object.data[
+            "messages"
+        ];
+        if (!Array.isArray(oldMessages)) throw new Err(typeErr);
 
-            if (!Array.isArray(alreadyReported)) throw new Err(typeErr);
+        oldMessages.push(message.id);
 
-            alreadyReported.push(reaction.message.id);
-
-            await dataHandler.Set(
-                params.name,
-                alreadyReported,
-                "alreadyReported"
-            );
-
-            // Remover do messages
-            const messages = (await dataHandler.Get(params.name)).val.object
-                .data.messages;
-
-            if (!Array.isArray(messages)) throw new Err(typeErr);
-
-            messages.splice(messages.indexOf(reaction.message.id), 1);
-
-            await dataHandler.Set(params.name, messages, "messages");
-        }
-
-        // Cancel the report if the user requested
-        if (!reason.val) return Ok.EMPTY;
-
-        messagesLib.embed.sendReportMessage({
-            interaction: reaction,
-            user,
-            logChat,
-            reason: reason.val,
-        });
+        await dataHandler.Set(params.name, oldMessages, "messages");
 
         return Ok.EMPTY;
     };
@@ -448,14 +405,14 @@ export const action: types.actionFunction = async (params) => {
             {
                 action: actionOnUserReaction,
                 actionParams: executionParams,
-                middleAction: middleActionOnFirstReaction
+                middleAction: middleActionOnFirstReaction,
             }
         );
         const dataHandler = new DataBowlHandler(commandName);
 
-        // Escrita no arquivo de dados
+        // Writing to the database
         {
-            // Adicionar no alreadyReported
+            // Put on 'alreadyReported'
             const alreadyReported = (await dataHandler.Get(params.name)).val
                 .object.data.alreadyReported;
 
@@ -469,7 +426,7 @@ export const action: types.actionFunction = async (params) => {
                 "alreadyReported"
             );
 
-            // Remover do messages
+            // Remove from 'messages'
             const messages = (await dataHandler.Get(params.name)).val.object
                 .data.messages;
 

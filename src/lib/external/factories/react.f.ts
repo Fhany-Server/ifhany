@@ -14,7 +14,7 @@ export namespace types {
         emoji: string | Snowflake;
         customEmoji?: boolean;
     };
-    export type MiddleAction = (message: Message) => Promise<Ok<void>>;
+    export type ActionBeforeReact = (message: Message) => Promise<Ok<void>>;
     export type ReactionFuns = {
         /**
          * Listener function to react to the
@@ -22,7 +22,7 @@ export namespace types {
          */
         reactOnNewMessage: <T>(
             params: ReactOnChatParams & T,
-            middleAction: MiddleAction
+            actionBeforeReact: ActionBeforeReact
         ) => Promise<Ok<AnyFunction>>;
     };
 }
@@ -30,7 +30,7 @@ export namespace types {
 //#region           Implementation
 const Default: Factory<types.ReactionFuns> = () => {
     const factory: FactoryObj<types.ReactionFuns> = {
-        reactOnNewMessage: async (params, middleAction) => {
+        reactOnNewMessage: async (params, actionBeforeReact) => {
             const listenerFunction = async (
                 message: Message
             ): Promise<Ok<void>> => {
@@ -43,7 +43,7 @@ const Default: Factory<types.ReactionFuns> = () => {
                     !flags.has(MessageFlags.Ephemeral) &&
                     msgChatId === presetChatId;
                 if (execCondition) {
-                    await middleAction(message);
+                    await actionBeforeReact(message);
 
                     if (params.customEmoji) {
                         const emoji = client.emojis.resolve(params.emoji);

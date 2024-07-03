@@ -111,8 +111,8 @@ export class DMDialog {
         }
 
         const cancelOptions: AwaitReactionsOptions = {
-            max: 2,
-            filter: (reaction) => reaction.emoji.name === this.cancelEmoji,
+            max: 1,
+            filter: (reaction, user) => ! user.bot && reaction.emoji.name === this.cancelEmoji,
         };
         const messageOptions: MessageCollectorOptions = {
             filter: (m) => m.author.id === this.user.id,
