@@ -1,9 +1,10 @@
 /** @format */
 //#region           External Lib
 
-
-import { REST } from "discord.js";
+import * as dotenv from "dotenv";
 import { Ok } from "ts-results";
+import { REST } from "discord.js";
+import { PrismaClient } from "@prisma/client";
 //#endregion
 //#region           Modules
 import general from "@/system/factories/general.f";
@@ -17,27 +18,29 @@ import { InteractionHandler } from "@/system/handlers/interaction";
 import { ListenerHandler } from "@/system/handlers/listener";
 //#endregion
 //#region           Variables
+dotenv.config();
+
 import pkg from "../package.json";
-import {
-    prodClientId,
-    guildId,
-    tokenProd,
-    devClientId,
-    devGuildId,
-    tokenDev,
-} from "../configs.json";
-import { DataBowlHandler } from "@/system/handlers/dataBowl";
+
+const tokenProd = process.env.PROD_TOKEN;
+const prodClientId = process.env.PROD_CLIENT_ID;
+const guildId = process.env.PROD_GUILD_ID;
+
+const tokenDev = process.env.DEV_TOKEN;
+const devClientId = process.env.DEV_CLIENT_ID;
+const devGuildId = process.env.DEV_GUILD_ID;
 
 const condition = process.env.DEV_MODE;
 
-export const guild = condition ? devGuildId : guildId;
-const token = condition ? tokenDev : tokenProd;
-const clientId = condition ? devClientId : prodClientId;
+export const guild = (condition ? devGuildId : guildId) || process.exit(1);
+const token = (condition ? tokenDev : tokenProd) || process.exit(1);
+const clientId = (condition ? devClientId : prodClientId) || process.exit(1);
 
 export const client = general.createClient({
     token: token,
     version: pkg.version,
 }).val;
+export const prisma = new PrismaClient();
 
 process.env.TZ = "America/Sao_Paulo";
 //#endregion
@@ -58,8 +61,6 @@ const main = async (): Promise<Ok<void>> => {
 
     // Ensure the databases and their files
     {
-        await new PresetHandler("none").EnsureDataExistence();
-        await new DataBowlHandler("none").EnsureDataExistence();
         await new PermissionsHandler().EnsureCommandsPermissions();
     }
     // Initializate listeners and other essential stuff

@@ -4,11 +4,14 @@
     "author": "Dev Myna <var.devmyna@gmail.com> (https://devmyna.xyz)",
     "main": "./dist/src/index.js",
     "dependencies": {
+        "@prisma/client": "^5.16.2",
         "anchorme": "^3.0.5",
         "axios": "^1.4.0",
         "discord.js": "^14.14.1",
+        "dotenv": "^16.4.5",
         "moment": "^2.29.4",
         "node-cache": "^5.1.2",
+        "prisma": "^5.16.2",
         "proper-lockfile": "^4.1.2",
         "ts-results": "^3.3.0",
         "typescript": "^5.0.4"
