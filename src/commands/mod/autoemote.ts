@@ -199,7 +199,7 @@ export const action: types.actionFunction = async (params) => {
 
     // Create Listeners
     {
-        const middleActionOnFirstReaction: reactTypes.MiddleAction = async (
+        const middleActionOnFirstReaction: reactTypes.ActionBeforeReact = async (
             message
         ) => {
             // const DataHandler = new DataBowlHandler(commandName);
