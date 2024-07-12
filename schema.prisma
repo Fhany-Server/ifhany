@@ -1,0 +1,33 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "mongodb"
+    url = env("DATABASE_URL")
+}
+
+
+
+
+model AutoReportPresetInfo {
+    uuid        String @id @default(uuid()) @map("_id")
+    name        String @unique
+    chatID      String
+    logChatID   String
+    emoji       String
+    emojiID     String?
+    customEmoji Boolean
+
+    infoUUID    String @unique
+    data        AutoReportPresetData? @relation(fields: [infoUUID], references: [uuid])
+}
+
+model AutoReportPresetData {
+    uuid            String @id @default(uuid()) @map("_id")
+    name            String @unique
+    alreadyReported String[]
+    noReported      String[]
+
+    info            AutoReportPresetInfo? @relation
+}
