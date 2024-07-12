@@ -73,6 +73,19 @@ export class Err extends ErrImpl<DefaultErr> {
 
 //#region           Variables
 const defaultErrMessage = "An error occurred during the interaction!";
+
+export const errors: Record<string, DefaultErr> = {
+    presetNotFound: {
+        message: "Preset não encontrado!",
+        origin: ErrorOrigin.User,
+        kind: ErrorKind.NotFound,
+    },
+    typeErr: {
+        message: "O valor recebido não é do tipo requerido!",
+        origin: ErrorOrigin.Internal,
+        kind: ErrorKind.TypeError,
+    }
+};
 //#endregion
 //#region           Implementation
 export class ErrorHandler {
