@@ -127,7 +127,7 @@ export class DMDialog {
             };
 
             // Listen to cancel option
-            messageSent.awaitReactions(cancelOptions).then(async (collection) => {
+            messageSent.awaitReactions(cancelOptions).then(async () => {
                 finish("canceled");
 
                 return void 0;
