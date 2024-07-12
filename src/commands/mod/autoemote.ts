@@ -22,9 +22,9 @@ import {
     DefaultErr,
     ErrorKind,
     ErrorOrigin,
+    errors,
 } from "@/system/handlers/errHandlers";
-import { client } from "//index";
-import { DataBowlHandler } from "@/system/handlers/dataBowl";
+import { client, prisma } from "//index";
 import { ListenerHandler } from "@/system/handlers/listener";
 //#endregion
 //#region           Typing
@@ -165,33 +165,37 @@ export const action: types.actionFunction = async (params) => {
             return Ok.EMPTY;
         }
 
-        const dataHandler = new DataBowlHandler(commandName);
-
-        // Escrita no arquivo de dados
+        // Update database
         {
-            // Adicionar no alreadyReported
-            const alreadyReported = (await dataHandler.Get(params.name)).val
-                .object.data.alreadyReported;
+            // Get data
+            const dataTable = await prisma.autoReportPresetData.findUnique({
+                where: { name: params.name },
+            });
+            if (!dataTable)
+                throw new Err(errors.presetNotFound);
 
-            if (!Array.isArray(alreadyReported)) throw new Err(typeErr);
+            // Update alreadyReported messages
+            if (!Array.isArray(dataTable.alreadyReported))
+                throw new Err(typeErr);
 
-            alreadyReported.push(reaction.message.id);
+            dataTable.alreadyReported.push(reaction.message.id);
 
-            await dataHandler.Set(
-                params.name,
-                alreadyReported,
-                "alreadyReported"
+            // Update noReported messages
+            if (!Array.isArray(dataTable.noReported)) throw new Err(typeErr);
+
+            dataTable.noReported.splice(
+                dataTable.noReported.indexOf(reaction.message.id),
+                1
             );
 
-            // Remover do messages
-            const messages = (await dataHandler.Get(params.name)).val.object
-                .data.messages;
-
-            if (!Array.isArray(messages)) throw new Err(typeErr);
-
-            messages.splice(messages.indexOf(reaction.message.id), 1);
-
-            await dataHandler.Set(params.name, messages, "messages");
+            // Apply
+            await prisma.autoReportPresetData.update({
+                where: { name: params.name },
+                data: {
+                    alreadyReported: dataTable.alreadyReported,
+                    noReported: dataTable.noReported,
+                },
+            });
         }
 
         return Ok.EMPTY;
@@ -199,32 +203,31 @@ export const action: types.actionFunction = async (params) => {
 
     // Create Listeners
     {
-        const middleActionOnFirstReaction: reactTypes.ActionBeforeReact = async (
-            message
-        ) => {
-            // const DataHandler = new DataBowlHandler(commandName);
+        const middleActionOnFirstReaction: reactTypes.ActionBeforeReact =
+            async (message) => {
+                // const DataHandler = new DataBowlHandler(commandName);
 
-            // const oldMessages = (await DataHandler.Get(params.name)).val
-            //     .object.data.messages;
+                // const oldMessages = (await DataHandler.Get(params.name)).val
+                //     .object.data.messages;
 
-            // if (!Array.isArray(oldMessages))
-            //     throw new Err({
-            //         message:
-            //             "The old messages array... Is not an array.",
-            //         origin: ErrorOrigin.Internal,
-            //         kind: ErrorKind.TypeError,
-            //     });
+                // if (!Array.isArray(oldMessages))
+                //     throw new Err({
+                //         message:
+                //             "The old messages array... Is not an array.",
+                //         origin: ErrorOrigin.Internal,
+                //         kind: ErrorKind.TypeError,
+                //     });
 
-            // await DataHandler.Set(
-            //     params.name,
-            //     [...oldMessages, message.id],
-            //     "messages"
-            // );
+                // await DataHandler.Set(
+                //     params.name,
+                //     [...oldMessages, message.id],
+                //     "messages"
+                // );
 
-            // Do nothing yet
+                // Do nothing yet
 
-            return Ok.EMPTY;
-        };
+                return Ok.EMPTY;
+            };
 
         const actionOnFirstReaction = await react.reactOnNewMessage(
             executionParams,

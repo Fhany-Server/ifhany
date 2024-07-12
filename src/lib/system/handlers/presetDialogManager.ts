@@ -20,9 +20,9 @@ import {
 import { Ok } from "ts-results";
 //#endregion
 //#region           Modules
-import { PresetHandler } from "@/system/handlers/presetHandler";
 import { EmbedMessagesHandler } from "../../external/handlers/embed";
 import { Err, ErrorOrigin, ErrorKind } from "@/system/handlers/errHandlers";
+import { prisma } from "//index";
 //#endregion
 //#region           Types
 export namespace types {
@@ -31,9 +31,7 @@ export namespace types {
     };
     export type DataDialogs = {
         PresetName: () => Promise<Ok<string>>;
-        String: (
-            questionEmbed: APIEmbed,
-        ) => Promise<Ok<string>>;
+        String: (questionEmbed: APIEmbed) => Promise<Ok<string>>;
         Options: (
             data: {
                 description: string;
@@ -205,10 +203,20 @@ export class PresetDialogHandler {
                 const verifyPresetExistence = async (
                     presetName: string
                 ): Promise<Ok<boolean>> => {
-                    const presetHandler = new PresetHandler(this.commandName);
-
                     try {
-                        await presetHandler.Get(presetName);
+                        const getPreset =
+                            prisma.autoReportPresetInfo.findUnique({
+                                where: {
+                                    name: presetName,
+                                },
+                            });
+
+                        if (getPreset === null)
+                            throw new Err({
+                                message: "Preset not found!",
+                                origin: ErrorOrigin.User,
+                                kind: ErrorKind.NotFound,
+                            });
 
                         return Ok(true);
                     } catch (err) {
@@ -326,7 +334,8 @@ export class PresetDialogHandler {
                     return Ok(awaitResponse.content);
                 };
 
-                const receivedString = (await getResponse(this.interaction)).val;
+                const receivedString = (await getResponse(this.interaction))
+                    .val;
 
                 return Ok(receivedString);
             },
