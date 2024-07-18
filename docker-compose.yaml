@@ -1,0 +1,11 @@
+services:
+  app:
+    build: .
+    user: root
+    container_name: ifhany_tests
+    volumes:
+      - .:/app
+    command: ["/app/scripts/on-container_test.bash" ]
+
+volumes:
+  ifhany_vol:
