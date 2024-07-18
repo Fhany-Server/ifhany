@@ -1,9 +1,4 @@
 #!/bin/bash
+export COMPOSE_FORCE_COLOR=TRUE
 
-export DEV_MODE=true;
-export NO_LOGS=true;
-export NODE_OPTIONS=--experimental-vm-modules;
-
-clear;
-
-npx jest --config=jest.config.ts "$@";
+sudo docker-compose up --build
