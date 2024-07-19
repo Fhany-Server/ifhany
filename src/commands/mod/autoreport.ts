@@ -552,7 +552,7 @@ const subCommands: Factory<types.SubCommands> = () => {
                 customEmoji,
             };
 
-            const initialDataBowl = {
+            const initialData = {
                 alreadyReported: [],
                 messages: [],
             };
@@ -567,7 +567,7 @@ const subCommands: Factory<types.SubCommands> = () => {
             await prisma.autoReportPresetData.create({
                 data: {
                     name: presetName,
-                    ...initialDataBowl,
+                    ...initialData,
                 },
             });
 
@@ -792,9 +792,11 @@ export const execute: types.execute = async (interaction) => {
 
     var response: Ok<string | APIEmbed>;
     const getEphemeral = interaction.options.getBoolean("ephemeral");
-    await interaction.deferReply({
-        ephemeral: getEphemeral !== null ? getEphemeral : true,
-    });
+
+    // await interaction.deferReply({
+    //     ephemeral: getEphemeral !== null ? getEphemeral : true,
+    // });
+
     switch (subcommand) {
         case "new":
             response = await scomms.new(interaction);

@@ -1,6 +1,5 @@
 /** @format */
 //#region           External Lib
-
 import * as dotenv from "dotenv";
 import { Ok } from "ts-results";
 import { REST } from "discord.js";
@@ -9,7 +8,6 @@ import { PrismaClient } from "@prisma/client";
 //#region           Modules
 import general from "@/system/factories/general.f";
 import { Log } from "@/system/handlers/log";
-import { PresetHandler } from "@/system/handlers/presetHandler";
 import { CommandHandler } from "@/system/handlers/command";
 import { PermissionsHandler } from "@/system/handlers/permission";
 import { InteractionHandler } from "@/system/handlers/interaction";
@@ -67,7 +65,7 @@ const main = async (): Promise<Ok<void>> => {
     {
         InteractionHandler.LaunchListener();
         ListenerHandler.PredefinedListeners();
-        await PresetHandler.InitializateAll();
+        //await PresetHandler.InitializateAll();
     }
 
     new Log("success.endOfMain").Print();
