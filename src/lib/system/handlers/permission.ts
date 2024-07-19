@@ -171,7 +171,7 @@ export class PermissionsHandler {
             }
         } else if (Array.isArray(allowed)) {
             var roles = [];
-            for (let i = 0; i <= allowed.length; i++) {
+            for (let i = 0; i < allowed.length; i++) {
                 const roleObj = await gld.roles.fetch(allowed[i]);
 
                 if (roleObj !== null) {

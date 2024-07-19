@@ -160,6 +160,10 @@ export class ErrorHandler {
         return factory;
     }
     public async Healer(): Promise<Ok<void>> {
+        //! DEV
+
+        console.log(this.error);
+
         return Ok.EMPTY;
     }
 }
