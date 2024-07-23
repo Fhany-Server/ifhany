@@ -56,7 +56,7 @@ export class PermissionsHandler {
         this._configs = {};
         this._configs_dir = path.resolve(
             __dirname,
-            "../../../../data/default/permissions.json"
+            "../../../../../config/default/permissions.json"
         );
     }
     //#region           Data Manipulation

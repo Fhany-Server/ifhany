@@ -13,11 +13,13 @@
             "args": []
         },
         {
+            "name": "Attach Program",
             "type": "node",
             "request": "attach",
             "port": 2129,
             "restart": true,
-            "name": "Attach Program",
+            "localRoot": "${workspaceFolder}",
+            "remoteRoot": "/app",
             "skipFiles": [
                 "<node_internals>/**"
             ]
