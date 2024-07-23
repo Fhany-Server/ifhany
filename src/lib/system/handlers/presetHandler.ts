@@ -35,7 +35,7 @@ export namespace types {
 //#region               Variables
 export const basePresetDir = path.join(
     __dirname,
-    "../../../../data/presets/info"
+    "../../../../../config/presets/info"
 );
 const baseCommandsDir = path.join(__dirname, "../../../../src/commands");
 //#endregion
