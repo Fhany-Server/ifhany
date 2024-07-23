@@ -33,7 +33,6 @@ RUN pacman -U --noconfirm /home/ifhany/yay/*.pkg.tar.zst
 RUN yay -Syyuu --noconfirm
 
 RUN yay -S npm --noconfirm
-
 RUN yay -S yarn --noconfirm
 
 ENV TERM=xterm

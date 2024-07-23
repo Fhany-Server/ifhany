@@ -1,4 +1,0 @@
-#!/bin/bash
-export COMPOSE_FORCE_COLOR=TRUE
-
-sudo docker-compose up --build
