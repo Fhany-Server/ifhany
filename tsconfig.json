@@ -28,10 +28,10 @@
                 "src/commands/*"
             ],
             "$/": [
-                "data/*"
+                "config/*"
             ],
             "D/*": [
-                "data/default/*"
+                "config/default/*"
             ],
             "T/*": [
                 "__tests__/*"
