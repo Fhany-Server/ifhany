@@ -119,9 +119,6 @@ backup/
 
 dist/*
 
-data/*
-!data/default/
-
 docs/
 
 discloud.config

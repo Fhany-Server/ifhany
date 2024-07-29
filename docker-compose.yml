@@ -1,0 +1,31 @@
+networks:
+    ifhany_net:
+        driver: bridge
+services:
+    database:
+        build: ./config
+        networks:
+            - ifhany_net
+        container_name: ifhany_db
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: root
+            MONGO_INITDB_ROOT_PASSWORD: ifhany
+            MONGO_INITDB_DATABASE: ifhany_db
+            MONGO_REPLICA_HOST: ifhany_db
+            MONGO_REPLICA_PORT: 27017
+        ports:
+            - 27017:27017
+    app:
+        build: .
+        user: root
+        container_name: ifhany_app
+        ports:
+            - 2129:2129
+        volumes:
+            - .:/app
+        networks:
+            - ifhany_net
+        depends_on:
+            - database
+volumes:
+    ifhany_vol:
