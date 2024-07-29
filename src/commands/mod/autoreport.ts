@@ -24,22 +24,19 @@ import filter from "@/system/factories/filter.f";
 import string from "@/system/factories/string.f";
 import verify from "@/system/factories/verify.f";
 import messagesLib from "@/external/factories/preseted.f";
-import presetCommandTemplate from "@/system/factories/presetCommandTemplate.f";
 import {
+    errors,
     DefaultErr,
     Err,
     ErrorKind,
     ErrorOrigin,
 } from "@/system/handlers/errHandlers";
 import { Log } from "@/system/handlers/log";
-import { client } from "//index";
-import { PresetHandler } from "@/system/handlers/presetHandler";
+import { client, prisma } from "//index";
 import { ListenerHandler } from "@/system/handlers/listener";
-import { DataBowlHandler } from "@/system/handlers/dataBowl";
 //#endregion
 //#region           Typing
 import { types as reactTypes } from "@/external/factories/react.f";
-import { types as presetTypes } from "@/system/components/preset";
 import { types as commandTypes } from "@/system/handlers/command";
 export namespace types {
     export type PresetParams = {
@@ -281,12 +278,6 @@ export const data: types.data = () => {
     });
 };
 export const action: types.actionFunction = async (params) => {
-    const typeErr: DefaultErr = {
-        message: "O valor recebido não é do tipo requerido!",
-        origin: ErrorOrigin.Internal,
-        kind: ErrorKind.TypeError,
-    };
-
     // Receive Preset data
     {
         const chatNotFound =
@@ -368,16 +359,19 @@ export const action: types.actionFunction = async (params) => {
     const middleActionOnFirstReaction: reactTypes.ActionBeforeReact = async (
         message
     ) => {
-        const dataHandler = new DataBowlHandler(commandName);
+        const dataTable = await prisma.autoReportPresetData.findUnique({
+            where: { name: params.name },
+        });
+        if (!dataTable) throw new Err(errors.presetNotFound);
 
-        const oldMessages = (await dataHandler.Get(params.name)).val.object.data[
-            "messages"
-        ];
-        if (!Array.isArray(oldMessages)) throw new Err(typeErr);
+        if (!Array.isArray(dataTable.noReported)) throw new Err(errors.typeErr);
 
-        oldMessages.push(message.id);
+        dataTable.noReported.push(message.id);
 
-        await dataHandler.Set(params.name, oldMessages, "messages");
+        await prisma.autoReportPresetData.update({
+            where: { name: params.name },
+            data: { noReported: dataTable.noReported },
+        });
 
         return Ok.EMPTY;
     };
@@ -408,33 +402,38 @@ export const action: types.actionFunction = async (params) => {
                 middleAction: middleActionOnFirstReaction,
             }
         );
-        const dataHandler = new DataBowlHandler(commandName);
 
         // Writing to the database
         {
+            // Get data
+            const dataTable = await prisma.autoReportPresetData.findUnique({
+                where: { name: params.name },
+            });
+            if (!dataTable) throw new Err(errors.presetNotFound);
+
             // Put on 'alreadyReported'
-            const alreadyReported = (await dataHandler.Get(params.name)).val
-                .object.data.alreadyReported;
+            if (!Array.isArray(dataTable.alreadyReported))
+                throw new Err(errors.typeErr);
 
-            if (!Array.isArray(alreadyReported)) throw new Err(typeErr);
-
-            alreadyReported.push(reaction.message.id);
-
-            await dataHandler.Set(
-                params.name,
-                alreadyReported,
-                "alreadyReported"
-            );
+            dataTable.alreadyReported.push(reaction.message.id);
 
             // Remove from 'messages'
-            const messages = (await dataHandler.Get(params.name)).val.object
-                .data.messages;
+            if (!Array.isArray(dataTable.noReported))
+                throw new Err(errors.typeErr);
 
-            if (!Array.isArray(messages)) throw new Err(typeErr);
+            dataTable.noReported.splice(
+                dataTable.noReported.indexOf(reaction.message.id),
+                1
+            );
 
-            messages.splice(messages.indexOf(reaction.message.id), 1);
-
-            await dataHandler.Set(params.name, messages, "messages");
+            // Update database
+            await prisma.autoReportPresetData.update({
+                where: { name: params.name },
+                data: {
+                    alreadyReported: dataTable.alreadyReported,
+                    noReported: dataTable.noReported,
+                },
+            });
         }
 
         // Cancel the report if the user requested
@@ -523,7 +522,6 @@ export const utils: types.Utils = {
     },
 };
 const subCommands: Factory<types.SubCommands> = () => {
-    const presetTemplate = presetCommandTemplate(commandName);
     const noReceivedRequiredParams: DefaultErr = {
         message:
             "Por algum motivo os parâmetros obrigatórios não foram recebidos.",
@@ -554,23 +552,36 @@ const subCommands: Factory<types.SubCommands> = () => {
                 customEmoji,
             };
 
-            const initialDataBowl = {
+            const initialData = {
                 alreadyReported: [],
                 messages: [],
             };
 
-            const response = await presetTemplate.new(
-                presetName,
-                presetParams,
-                initialDataBowl
-            );
+            await prisma.autoReportPresetInfo.create({
+                data: {
+                    name: presetName,
+                    ...presetParams,
+                },
+            });
+
+            await prisma.autoReportPresetData.create({
+                data: {
+                    name: presetName,
+                    ...initialData,
+                },
+            });
 
             await action({
                 name: presetName,
                 ...presetParams,
             });
 
-            return Ok(response.val);
+            return Ok(
+                string.varInterpreter(
+                    messages.commands.mod.autoreport.utils.success.createPreset,
+                    { presetName: presetName }
+                ).val
+            );
         },
         edit: async (interaction) => {
             // Receber Dados
@@ -626,17 +637,19 @@ const subCommands: Factory<types.SubCommands> = () => {
                   ).val
                 : null;
 
-            const editedPreset = await presetTemplate.edit(
-                receivedData.presetName,
-                {
-                    chatID: receivedData.chat ? receivedData.chat.id : null,
+            const editedPreset = await prisma.autoReportPresetInfo.update({
+                where: { name: receivedData.presetName },
+                data: {
+                    chatID: receivedData.chat
+                        ? receivedData.chat.id
+                        : undefined,
                     logChatID: receivedData.logChat
                         ? receivedData.logChat.id
-                        : null,
-                    presetNewName: receivedData.presetNewName,
+                        : undefined,
+                    name: receivedData.presetNewName,
                     emoji: sanitizeReceivedEmoji
                         ? sanitizeReceivedEmoji.filteredEmoji.name
-                        : null,
+                        : undefined,
                     emojiID: sanitizeReceivedEmoji
                         ? sanitizeReceivedEmoji.filteredEmoji.id
                         : undefined,
@@ -644,11 +657,11 @@ const subCommands: Factory<types.SubCommands> = () => {
                         sanitizeReceivedEmoji &&
                         typeof receivedCustomEmoji === "boolean"
                             ? receivedCustomEmoji
-                            : null,
-                }
-            );
+                            : undefined,
+                },
+            });
 
-            const newObj = editedPreset.val.obj;
+            const newObj = editedPreset;
             if (!newObj)
                 throw new Err({
                     message:
@@ -688,7 +701,7 @@ const subCommands: Factory<types.SubCommands> = () => {
                 });
 
             const executionParams = {
-                name: newObj.presetName,
+                name: newObj.name,
                 chatID: newObj.chatID,
                 logChatID: newObj.logChatID,
                 emoji: "",
@@ -738,10 +751,13 @@ const subCommands: Factory<types.SubCommands> = () => {
             const removePrevious =
                 interaction.options.getBoolean("remove-previous");
 
-            const removePreset = await presetTemplate.remove(
-                presetName,
-                removePrevious
-            );
+            await prisma.autoReportPresetInfo.delete({
+                where: { name: presetName },
+            });
+
+            await prisma.autoReportPresetData.delete({
+                where: { name: presetName },
+            });
 
             new ListenerHandler(
                 Events.MessageCreate,
@@ -752,21 +768,14 @@ const subCommands: Factory<types.SubCommands> = () => {
                 `${Events.MessageReactionAdd}-${presetName}`
             ).Remove();
 
-            if (removePreset.ok) {
-                return Ok(removePreset.val);
-            } else {
-                return removePreset;
-            }
+
+            return Ok(`O preset **${presetName}** foi removido`);
+            
         },
         list: async (interaction) => {
-            const withOlds = interaction.options.getBoolean("with-olds");
-
-            const presetList = await presetTemplate.list(withOlds);
-
             const messageEmbed = await messagesLib.embed.sendListMessage(
                 {
                     commandName,
-                    presetList: presetList.val,
                 },
                 interaction,
                 true
@@ -783,9 +792,11 @@ export const execute: types.execute = async (interaction) => {
 
     var response: Ok<string | APIEmbed>;
     const getEphemeral = interaction.options.getBoolean("ephemeral");
-    await interaction.deferReply({
-        ephemeral: getEphemeral !== null ? getEphemeral : true,
-    });
+
+    // await interaction.deferReply({
+    //     ephemeral: getEphemeral !== null ? getEphemeral : true,
+    // });
+
     switch (subcommand) {
         case "new":
             response = await scomms.new(interaction);
@@ -820,9 +831,11 @@ export const execute: types.execute = async (interaction) => {
 };
 export const autocomplete: types.autocomplete = async (interaction) => {
     const focused = interaction.options.getFocused(true);
-    const list: presetTypes.PresetInfo[] = (
-        await new PresetHandler(commandName).List()
-    ).val;
+    const list = await prisma.autoReportPresetInfo.findMany({
+        select: {
+            name: true,
+        },
+    });
 
     const subComm = interaction.options.getSubcommand();
 

@@ -13,15 +13,14 @@ import { Ok } from "ts-results";
 import react from "@/external/factories/react.f";
 import { Log } from "@/system/handlers/log";
 import { DMDialog } from "@/external/handlers/dmDialog";
-import { PresetHandler } from "@/system/handlers/presetHandler";
 import { EmbedMessagesHandler } from "@/external/handlers/embed";
 import { Err, ErrorOrigin, ErrorKind } from "@/system/handlers/errHandlers";
 //#endregion
 //#region           Types
 import { types as reactTypes } from "@/external/factories/react.f";
 import { types as embedTypes } from "@/external/handlers/embed";
-import { types as presetTypes } from "@/system/components/preset";
 import { types as autoReportTypes } from ">/mod/autoreport";
+import { prisma } from "//index";
 export namespace types {
     export type PresetedFuns = {
         embed: {
@@ -34,7 +33,6 @@ export namespace types {
             sendListMessage: (
                 params: {
                     commandName: string;
-                    presetList: presetTypes.PresetInfo[];
                 },
                 interaction: ChatInputCommandInteraction,
                 iNeedEmbed?: boolean
@@ -52,7 +50,7 @@ export namespace types {
                 params: {
                     action: AnyFunction;
                     actionParams: autoReportTypes.PresetParams;
-                    middleAction: reactTypes.ActionBeforeReact
+                    middleAction: reactTypes.ActionBeforeReact;
                 }
             ) => Promise<Ok<embedTypes.ReportReason | false>>;
         };
@@ -173,31 +171,26 @@ const Default: Factory<types.PresetedFuns> = () => {
                 const getEmbed = await EmbedHandler.Mount(embedParams);
                 var embed = getEmbed.val.embedData;
 
-                for (const obj of params.presetList) {
-                    var receivedPreset = await new PresetHandler(
-                        params.commandName
-                    ).Get(obj.name);
+                const dataTables = await prisma.autoReportPresetInfo.findMany();
 
-                    var preset = receivedPreset.val.object
-                        .data as autoReportTypes.ReceivedStoredParams;
-
-                    embed.description += `· **${obj.name}** - `;
-
-                    if (preset.customEmoji) {
-                        embed.description += `<:${preset.emoji}:${preset.emojiID}> - `;
-                    } else {
-                        embed.description += `${preset.emoji} - `;
-                    }
-
-                    embed.description +=
-                        `<#${preset.chatID}> -> ` + `<#${preset.logChatID}>\n`;
-                }
-
-                if (params.presetList.length === 0) {
+                if (dataTables.length === 0) {
                     embed.title = "Vish...";
                     embed.description =
                         "Não existem presets disponíveis!\n" +
                         `*Você pode criar um usando \`/${params.commandName} new\`!*`;
+                } else {
+                    for (const obj of dataTables) {
+                        embed.description += `· **${obj.name}** - `;
+    
+                        if (obj.customEmoji) {
+                            embed.description += `<:${obj.emoji}:${obj.emojiID}> - `;
+                        } else {
+                            embed.description += `${obj.emoji} - `;
+                        }
+    
+                        embed.description +=
+                            `<#${obj.chatID}> -> ` + `<#${obj.logChatID}>\n`;
+                    }
                 }
 
                 const mountedEmbed = await EmbedHandler.Update(embed);
