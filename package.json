@@ -6,7 +6,7 @@
     "dependencies": {
         "@prisma/client": "^5.17.0",
         "anchorme": "^3.0.5",
-        "axios": "^1.4.0",
+        "axios": "^1.7.3",
         "discord.js": "^14.14.1",
         "dotenv": "^16.4.5",
         "moment": "^2.29.4",
@@ -58,6 +58,11 @@
         "typedoc": "^0.24.8",
         "typedoc-material-theme": "^1.0.1",
         "typescript-json-schema": "^0.62.0"
+    },
+    "husky": {
+        "hooks": {
+            "commit-msg": "npx commitlint -E HUSKY_GIT_PARAMS"
+        }
     },
     "_moduleAliases": {
         "/": "dist/src",
