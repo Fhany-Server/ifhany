@@ -179,17 +179,24 @@ const Default: Factory<types.PresetedFuns> = () => {
                         "Não existem presets disponíveis!\n" +
                         `*Você pode criar um usando \`/${params.commandName} new\`!*`;
                 } else {
-                    for (const obj of dataTables) {
-                        embed.description += `· **${obj.name}** - `;
-    
-                        if (obj.customEmoji) {
-                            embed.description += `<:${obj.emoji}:${obj.emojiID}> - `;
+                    for (const preset of dataTables) {
+                        embed.description += `· **${preset.name}** - `;
+
+                        if (preset.customEmoji) {
+                            embed.description += `<:${preset.emoji}:${preset.emojiID}> - `;
                         } else {
-                            embed.description += `${obj.emoji} - `;
+                            embed.description += `${preset.emoji} - `;
                         }
-    
+
                         embed.description +=
-                            `<#${obj.chatID}> -> ` + `<#${obj.logChatID}>\n`;
+                            `<#${preset.chatID}> -> ` +
+                            `<#${preset.logChatID}>`;
+
+                        if (!preset.reactNewMessages) {
+                            embed.description += " (not reacting to new messages :x:)";
+                        }
+
+                        embed.description += "\n";
                     }
                 }
 
