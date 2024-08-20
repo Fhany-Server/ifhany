@@ -140,9 +140,9 @@ export const data: types.data = () => {
         remove: {
             subc: "Remove o preset que você criou para eu reagir nos chats!",
             preset: "Qual preset você deseja remover?",
-            removePrevious:
-                "Você deseja que eu faça com que as mensagens já reagidas " +
-                "parem de ser reportadas?",
+            preservePrevious:
+                "Você deseja que eu continue lidando com as mensagens já reagidas? " +
+                "(remoção parcial)",
         },
         list: {
             subc: "Lista todos os presets que você criou para eu reagir nos chats!",
@@ -246,10 +246,10 @@ export const data: types.data = () => {
                             .setAutocomplete(true)
                             .setRequired(true)
                     )
-                    .addBooleanOption((removePrevious) =>
-                        removePrevious
-                            .setName("remove-previous")
-                            .setDescription(description.remove.removePrevious)
+                    .addBooleanOption((preservePrevious) =>
+                        preservePrevious
+                            .setName("preserve-previous")
+                            .setDescription(description.remove.preservePrevious)
                     )
                     .addBooleanOption((ephemeral) =>
                         ephemeral
@@ -262,11 +262,6 @@ export const data: types.data = () => {
                 list
                     .setName("list")
                     .setDescription(description.list.subc)
-                    .addBooleanOption((withOlds) =>
-                        withOlds
-                            .setName("with-olds")
-                            .setDescription(description.list.withOlds)
-                    )
                     .addBooleanOption((ephemeral) =>
                         ephemeral
                             .setName("ephemeral")
@@ -356,9 +351,7 @@ export const action: types.actionFunction = async (params) => {
         };
     }
 
-    const middleActionOnFirstReaction: reactTypes.ActionBeforeReact = async (
-        message
-    ) => {
+    const actionBeforeReact: reactTypes.ActionBeforeReact = async (message) => {
         const dataTable = await prisma.autoReportPresetData.findUnique({
             where: { name: params.name },
         });
@@ -399,7 +392,7 @@ export const action: types.actionFunction = async (params) => {
             {
                 action: actionOnUserReaction,
                 actionParams: executionParams,
-                middleAction: middleActionOnFirstReaction,
+                middleAction: actionBeforeReact,
             }
         );
 
@@ -453,7 +446,7 @@ export const action: types.actionFunction = async (params) => {
     {
         const actionOnFirstReaction = await react.reactOnNewMessage(
             executionParams,
-            middleActionOnFirstReaction
+            actionBeforeReact
         );
 
         // React to new messages
@@ -552,14 +545,10 @@ const subCommands: Factory<types.SubCommands> = () => {
                 customEmoji,
             };
 
-            const initialData = {
-                alreadyReported: [],
-                messages: [],
-            };
-
-            await prisma.autoReportPresetInfo.create({
+            const presetInfo = await prisma.autoReportPresetInfo.create({
                 data: {
                     name: presetName,
+                    reactNewMessages: true,
                     ...presetParams,
                 },
             });
@@ -567,7 +556,9 @@ const subCommands: Factory<types.SubCommands> = () => {
             await prisma.autoReportPresetData.create({
                 data: {
                     name: presetName,
-                    ...initialData,
+                    alreadyReported: [],
+                    noReported: [],
+                    infoUUID: presetInfo.uuid
                 },
             });
 
@@ -748,29 +739,35 @@ const subCommands: Factory<types.SubCommands> = () => {
                 "preset-name",
                 true
             );
-            const removePrevious =
-                interaction.options.getBoolean("remove-previous");
+            const preservePrevious =
+                interaction.options.getBoolean("preserve-previous");
 
-            await prisma.autoReportPresetInfo.delete({
-                where: { name: presetName },
-            });
+            if (preservePrevious) {
+                await prisma.autoReportPresetInfo.update({
+                    where: { name: presetName },
+                    data: { reactNewMessages: false },
+                });
+            } else {
+                await prisma.autoReportPresetData.delete({
+                    where: { name: presetName },
+                });
 
-            await prisma.autoReportPresetData.delete({
-                where: { name: presetName },
-            });
+                await prisma.autoReportPresetInfo.delete({
+                    where: { name: presetName },
+                });
+
+                new ListenerHandler(
+                    Events.MessageReactionAdd,
+                    `${Events.MessageReactionAdd}-${presetName}`
+                ).Remove();
+            }
 
             new ListenerHandler(
                 Events.MessageCreate,
                 `${Events.MessageCreate}-${presetName}`
             ).Remove();
-            new ListenerHandler(
-                Events.MessageReactionAdd,
-                `${Events.MessageReactionAdd}-${presetName}`
-            ).Remove();
-
 
             return Ok(`O preset **${presetName}** foi removido`);
-            
         },
         list: async (interaction) => {
             const messageEmbed = await messagesLib.embed.sendListMessage(
@@ -793,9 +790,9 @@ export const execute: types.execute = async (interaction) => {
     var response: Ok<string | APIEmbed>;
     const getEphemeral = interaction.options.getBoolean("ephemeral");
 
-    // await interaction.deferReply({
-    //     ephemeral: getEphemeral !== null ? getEphemeral : true,
-    // });
+    await interaction.deferReply({
+        ephemeral: getEphemeral !== null ? getEphemeral : true,
+    });
 
     switch (subcommand) {
         case "new":

@@ -15,6 +15,7 @@ model AutoReportPresetInfo {
     emoji            String
     emojiID          String?
     customEmoji      Boolean
+    reactNewMessages Boolean
 
     info AutoReportPresetData? @relation
 }
