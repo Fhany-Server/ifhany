@@ -29,3 +29,28 @@ model AutoReportPresetData {
     infoUUID String                @unique
     data     AutoReportPresetInfo? @relation(fields: [infoUUID], references: [uuid])
 }
+
+model User {
+    id String @id @map("_id")
+
+    punishments UserPunishment[] @relation
+}
+
+model Guild {
+    id    String           @id @map("_id")
+    cases UserPunishment[] @relation
+}
+
+model UserPunishment {
+    case        Int    @id @map("_id")
+    createdAt   DateTime
+    expiresAt   DateTime
+    reason      String
+
+
+    userId      String @unique
+    user        User   @relation(fields: [userId], references: [id])
+
+    guildId     String @unique
+    guild       Guild  @relation(fields: [guildId], references: [id])
+}
