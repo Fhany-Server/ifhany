@@ -560,7 +560,7 @@ const subCommands: Factory<types.SubCommands> = () => {
                     name: presetName,
                     alreadyReported: [],
                     noReported: [],
-                    infoUUID: presetInfo.uuid
+                    infoUUID: presetInfo.uuid,
                 },
             });
 
