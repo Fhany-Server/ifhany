@@ -14,7 +14,7 @@ import {
 //#endregion
 //#region           Modules
 import { Log } from "@/system/handlers/log";
-import { Err, ErrorOrigin, ErrorKind } from "@/system/handlers/errHandlers";
+import { BotErr, ErrorOrigin, ErrorKind, Result } from "@/system/handlers/errHandlers";
 //#endregion
 //#region           Typing
 import { types as mainTypes } from "../factories/general.f";
@@ -128,7 +128,7 @@ export class CommandHandler {
 
                     command = getCommandData.val;
                 } else {
-                    throw new Err({
+                    throw new BotErr({
                         message:
                             "Something is wrong! The command is not found!",
                         origin: ErrorOrigin.Internal,
@@ -145,7 +145,7 @@ export class CommandHandler {
                 if (isGuild) this.commands_data.guild.push(commandData);
                 else if (!isGuild) this.commands_data.global.push(commandData);
                 else
-                    throw new Err({
+                    throw new BotErr({
                         message:
                             "The requested command doesn't have" +
                             "the property declarations!",
@@ -225,7 +225,7 @@ export class CommandHandler {
      */
     public async Deploy(): Promise<Ok<void>> {
         if (!(this.commands_collection.size > 0)) {
-            throw new Err({
+            throw new BotErr({
                 message: "Are you trying to deploy... Any command? What?",
                 origin: ErrorOrigin.Internal,
                 kind: ErrorKind.EmptyValue,

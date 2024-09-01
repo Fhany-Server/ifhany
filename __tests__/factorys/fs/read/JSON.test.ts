@@ -1,7 +1,7 @@
 /** @format */
 //#region           External Libs
 import mock from "mock-fs";
-import { Err } from "@/system/handlers/errHandlers";
+import { BotErr } from "@/system/handlers/errHandlers";
 //#endregion
 //#region           Modules
 import read from "@/system/factories/fs/read.f";
@@ -38,7 +38,7 @@ describe("JSON", () => {
         try {
             result = await read.JSON("/archives/invalid.json");
         } catch (err) {
-            if (err instanceof Err) {
+            if (err instanceof BotErr) {
                 result = err;
             } else {
                 throw err;
@@ -55,7 +55,7 @@ describe("JSON", () => {
         try {
             result = await read.JSON("/archives/noJSON.txt");
         } catch (err) {
-            if (err instanceof Err) {
+            if (err instanceof BotErr) {
                 result = err;
             } else {
                 throw err;

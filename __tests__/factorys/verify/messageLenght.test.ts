@@ -5,7 +5,7 @@ import { Collection, Message } from "discord.js";
 //#endregion
 //#region           Modules
 import verify from "@/system/factories/verify.f";
-import { Err, ErrorOrigin, ErrorKind } from "@/system/handlers/errHandlers";
+import { BotErr, ErrorOrigin, ErrorKind } from "@/system/handlers/errHandlers";
 //#endregion
 //#region           Implementation
 const mountMessage = async (
@@ -24,7 +24,7 @@ const getMessage = async (content: string): Promise<Message> => {
 
     if (message) return message;
     else
-        throw new Err({
+        throw new BotErr({
             message: "Message was not mounted!",
             origin: ErrorOrigin.Unknown,
             kind: ErrorKind.Other,

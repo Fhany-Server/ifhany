@@ -7,7 +7,7 @@ import { Ok } from "ts-results";
 //#endregion
 //#region           Modules
 import verify from "@/system/factories/verify.f";
-import { Err, ErrorKind, ErrorOrigin } from "@/system/handlers/errHandlers";
+import { BotErr, ErrorKind, ErrorOrigin } from "@/system/handlers/errHandlers";
 //#endregion
 //#region           Typing
 export namespace types {
@@ -56,13 +56,13 @@ const Default: Factory<types.Functions> = () => {
                     return Ok(JSON.parse(data));
                 } else {
                     if (data === "") {
-                        throw new Err({
+                        throw new BotErr({
                             message: "This JSON file is empty!",
                             origin: ErrorOrigin.Internal,
                             kind: ErrorKind.EmptyValue,
                         });
                     } else {
-                        throw new Err({
+                        throw new BotErr({
                             message: "This is an invalid JSON!",
                             origin: ErrorOrigin.Internal,
                             kind: ErrorKind.InvalidValue,
@@ -70,7 +70,7 @@ const Default: Factory<types.Functions> = () => {
                     }
                 }
             } else {
-                throw new Err({
+                throw new BotErr({
                     message: "This is not a JSON file!",
                     origin: ErrorOrigin.Internal,
                     kind: ErrorKind.TypeError,
@@ -90,7 +90,7 @@ const Default: Factory<types.Functions> = () => {
             // Syntax verification
             const syntax = /^(?:\w+|\[\d+\])(?:\.\w+|\[\d+\])*$/;
             if (!syntax.test(path)) {
-                throw new Err({
+                throw new BotErr({
                     message: syntaxErr,
                     origin: ErrorOrigin.Internal,
                     kind: ErrorKind.SyntaxError,
@@ -112,7 +112,7 @@ const Default: Factory<types.Functions> = () => {
                 }
 
                 if (!(part in value)) {
-                    throw new Err({
+                    throw new BotErr({
                         message: notFoundValue,
                         origin: ErrorOrigin.Internal,
                         kind: ErrorKind.NotFound,
@@ -133,7 +133,7 @@ const Default: Factory<types.Functions> = () => {
                 }
             }
 
-            throw new Err({
+            throw new BotErr({
                 message: `File "${fileName}" not found!`,
                 origin: ErrorOrigin.Internal,
                 kind: ErrorKind.NotFound,

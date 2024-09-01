@@ -14,7 +14,7 @@ import react from "@/external/factories/react.f";
 import { Log } from "@/system/handlers/log";
 import { DMDialog } from "@/external/handlers/dmDialog";
 import { EmbedMessagesHandler } from "@/external/handlers/embed";
-import { Err, ErrorOrigin, ErrorKind } from "@/system/handlers/errHandlers";
+import { BotErr, ErrorOrigin, ErrorKind } from "@/system/handlers/errHandlers";
 //#endregion
 //#region           Types
 import { types as reactTypes } from "@/external/factories/react.f";
@@ -236,7 +236,7 @@ const Default: Factory<types.PresetedFuns> = () => {
                     params.actionParams.emoji
                 );
                 if (!messageReaction)
-                    throw new Err({
+                    throw new BotErr({
                         message: "Message Reaction not found!",
                         origin: ErrorOrigin.External,
                         kind: ErrorKind.NotFound,
@@ -248,7 +248,7 @@ const Default: Factory<types.PresetedFuns> = () => {
                 const reported = messageReaction.message.author;
 
                 if (!reported)
-                    throw new Err({
+                    throw new BotErr({
                         message: "Não foi possível identificar o usuário!",
                         origin: ErrorOrigin.External,
                         kind: ErrorKind.Other,
@@ -325,7 +325,7 @@ const Default: Factory<types.PresetedFuns> = () => {
 
                     return Ok(obj);
                 } else {
-                    throw new Err({
+                    throw new BotErr({
                         message:
                             "Algo de errado aconteceu! O DMDialog enviou um objeto vazio!",
                         origin: ErrorOrigin.Internal,

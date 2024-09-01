@@ -21,7 +21,7 @@ import { Ok } from "ts-results";
 //#endregion
 //#region           Modules
 import { EmbedMessagesHandler } from "../../external/handlers/embed";
-import { Err, ErrorOrigin, ErrorKind } from "@/system/handlers/errHandlers";
+import { BotErr, ErrorOrigin, ErrorKind } from "@/system/handlers/errHandlers";
 import { prisma } from "//index";
 //#endregion
 //#region           Types
@@ -193,7 +193,7 @@ export class PresetDialogHandler {
         const factory: FactoryObj<types.DataDialogs> = {
             PresetName: async () => {
                 if (this.interaction.channel === null) {
-                    throw new Err({
+                    throw new BotErr({
                         message: "This interaction doesn't have a channel!",
                         origin: ErrorOrigin.User,
                         kind: ErrorKind.TypeError,
@@ -212,7 +212,7 @@ export class PresetDialogHandler {
                             });
 
                         if (getPreset === null)
-                            throw new Err({
+                            throw new BotErr({
                                 message: "Preset not found!",
                                 origin: ErrorOrigin.User,
                                 kind: ErrorKind.NotFound,
@@ -221,7 +221,7 @@ export class PresetDialogHandler {
                         return Ok(true);
                     } catch (err) {
                         if (
-                            err instanceof Err &&
+                            err instanceof BotErr &&
                             err.val.kind === ErrorKind.NotFound
                         )
                             return Ok(false);
@@ -250,7 +250,7 @@ export class PresetDialogHandler {
                 ).first();
 
                 if (awaitResponse === undefined) {
-                    throw new Err({
+                    throw new BotErr({
                         message: "Tempo esgotado!",
                         origin: ErrorOrigin.User,
                         kind: ErrorKind.TimeOut,
@@ -282,7 +282,7 @@ export class PresetDialogHandler {
                     ).first();
 
                     if (awaitResponse === undefined) {
-                        throw new Err({
+                        throw new BotErr({
                             message: "Tempo esgotado!",
                             origin: ErrorOrigin.User,
                             kind: ErrorKind.TimeOut,
@@ -306,7 +306,7 @@ export class PresetDialogHandler {
                     interaction: ChatInputCommandInteraction
                 ): Promise<Ok<string>> => {
                     if (interaction.channel === null) {
-                        throw new Err({
+                        throw new BotErr({
                             message: "This interaction doesn't have a channel!",
                             origin: ErrorOrigin.User,
                             kind: ErrorKind.TypeError,
@@ -323,7 +323,7 @@ export class PresetDialogHandler {
                     ).first();
 
                     if (awaitResponse === undefined) {
-                        throw new Err({
+                        throw new BotErr({
                             message: "Tempo esgotado!",
                             origin: ErrorOrigin.User,
                             kind: ErrorKind.TimeOut,
