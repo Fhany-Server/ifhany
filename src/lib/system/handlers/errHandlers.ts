@@ -114,7 +114,7 @@ export class ErrorHandler {
             warnDeveloper: async () => {
                 var message: string;
 
-                if (this.error instanceof Err) message = this.error.val.message;
+                if (this.error instanceof BotErr) message = this.error.val.message;
                 else if (this.error instanceof Error)
                     message = this.error.message;
                 else message = defaultErrMessage;
@@ -137,7 +137,7 @@ export class ErrorHandler {
                     await devUser.send(devMessage);
                 } catch (err) {
                     Log.PrintErr(
-                        new Err({
+                        new BotErr({
                             message:
                                 "Erro em cima de erro em! " +
                                 "Não consegui enviar a mensagem para o dev.",

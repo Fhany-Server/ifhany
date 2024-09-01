@@ -8,7 +8,7 @@ import { DiscordAPIError, Message } from "discord.js";
 import { client } from "//index";
 import {
     DefaultErr,
-    Err,
+    BotErr,
     ErrorOrigin,
     ErrorKind,
 } from "@/system/handlers/errHandlers";
@@ -50,19 +50,19 @@ const Default: Factory<types.Functions> = () => {
         getMessage: async (chatId, messageId) => {
             try {
                 const chat = await client.channels.fetch(chatId);
-                if (chat === null) throw new Err(errors.chatNotFound);
-                if (!("messages" in chat)) throw new Err(errors.noMessages);
+                if (chat === null) throw new BotErr(errors.chatNotFound);
+                if (!("messages" in chat)) throw new BotErr(errors.noMessages);
 
                 const message = await chat.messages.fetch(messageId);
-                if (message === null) throw new Err(errors.messageNotFound);
+                if (message === null) throw new BotErr(errors.messageNotFound);
 
                 return new Ok(message);
             } catch (err) {
                 if (err instanceof DiscordAPIError) {
                     if (err.code === 10003) {
-                        throw new Err(errors.chatNotFound);
+                        throw new BotErr(errors.chatNotFound);
                     } else if (err.code === 10008) {
-                        throw new Err(errors.messageNotFound);
+                        throw new BotErr(errors.messageNotFound);
                     } else {
                         throw err;
                     }

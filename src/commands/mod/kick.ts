@@ -11,7 +11,13 @@ import {
 //#endregion
 //#region               Modules
 import { types as commandTypes } from "@/system/handlers/command";
-import { Err, ErrorKind, ErrorOrigin } from "//lib/system/handlers/errHandlers";
+import {
+    BotErr,
+    ErrorKind,
+    ErrorOrigin,
+    Result,
+} from "@/system/handlers/errHandlers";
+import { PunishmentHandler } from "../../lib/system/handlers/punishmentHandler";
 //#endregion
 //#region               Typing
 export namespace types {
@@ -83,7 +89,7 @@ export const execute: types.execute = async (interaction) => {
     });
 
     if (!interaction.guild)
-        throw new Err({
+        return new BotErr({
             message: "Guild not found!",
             kind: ErrorKind.NotFound,
             origin: ErrorOrigin.Unknown,

@@ -4,7 +4,7 @@ import fs from "fs/promises";
 import { Ok } from "ts-results";
 //#endregion
 //#region           Modules
-import { Err, ErrorKind, ErrorOrigin } from "@/system/handlers/errHandlers";
+import { BotErr, ErrorKind, ErrorOrigin } from "@/system/handlers/errHandlers";
 //#endregion
 //#region           Typing
 export namespace types {
@@ -31,7 +31,7 @@ const Default: Factory<types.Functions> = () => {
                 const defaultMessage =
                     "Algum erro ocorreu na escrita de um arquivo!";
 
-                throw new Err({
+                throw new BotErr({
                     message: defaultMessage,
                     origin: ErrorOrigin.Unknown,
                     kind: ErrorKind.Other,

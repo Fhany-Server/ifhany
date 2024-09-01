@@ -27,7 +27,7 @@ import messagesLib from "@/external/factories/preseted.f";
 import {
     errors,
     DefaultErr,
-    Err,
+    BotErr,
     ErrorKind,
     ErrorOrigin,
 } from "@/system/handlers/errHandlers";
@@ -288,7 +288,7 @@ export const action: types.actionFunction = async (params) => {
         const getChat = await client.channels.fetch(params.chatID);
         {
             if (!getChat) {
-                throw new Err({
+                throw new BotErr({
                     message: chatNotFound,
                     origin: ErrorOrigin.External,
                     kind: ErrorKind.NotFound,
@@ -297,7 +297,7 @@ export const action: types.actionFunction = async (params) => {
             if (getChat.isTextBased()) {
                 chat = getChat;
             } else {
-                throw new Err({
+                throw new BotErr({
                     message: wrongTypeErr,
                     origin: ErrorOrigin.User,
                     kind: ErrorKind.TypeError,
@@ -309,7 +309,7 @@ export const action: types.actionFunction = async (params) => {
         const getLogChat = await client.channels.fetch(params.logChatID);
         {
             if (!getLogChat) {
-                throw new Err({
+                throw new BotErr({
                     message: chatNotFound,
                     origin: ErrorOrigin.External,
                     kind: ErrorKind.NotFound,
@@ -318,7 +318,7 @@ export const action: types.actionFunction = async (params) => {
             if (getLogChat.isTextBased()) {
                 logChat = getLogChat;
             } else {
-                throw new Err({
+                throw new BotErr({
                     message: wrongTypeErr,
                     origin: ErrorOrigin.User,
                     kind: ErrorKind.TypeError,
@@ -331,7 +331,7 @@ export const action: types.actionFunction = async (params) => {
             const getEmoji = client.emojis.resolve(params.emojiID);
 
             if (!getEmoji)
-                throw new Err({
+                throw new BotErr({
                     message: emojiNotFound,
                     origin: ErrorOrigin.External,
                     kind: ErrorKind.NotFound,
@@ -355,9 +355,10 @@ export const action: types.actionFunction = async (params) => {
         const dataTable = await prisma.autoReportPresetData.findUnique({
             where: { name: params.name },
         });
-        if (!dataTable) throw new Err(errors.presetNotFound);
+        if (!dataTable) throw new BotErr(errors.presetNotFound);
 
-        if (!Array.isArray(dataTable.noReported)) throw new Err(errors.typeErr);
+        if (!Array.isArray(dataTable.noReported))
+            throw new BotErr(errors.typeErr);
 
         dataTable.noReported.push(message.id);
 
@@ -402,17 +403,17 @@ export const action: types.actionFunction = async (params) => {
             const dataTable = await prisma.autoReportPresetData.findUnique({
                 where: { name: params.name },
             });
-            if (!dataTable) throw new Err(errors.presetNotFound);
+            if (!dataTable) throw new BotErr(errors.presetNotFound);
 
             // Put on 'alreadyReported'
             if (!Array.isArray(dataTable.alreadyReported))
-                throw new Err(errors.typeErr);
+                throw new BotErr(errors.typeErr);
 
             dataTable.alreadyReported.push(reaction.message.id);
 
             // Remove from 'messages'
             if (!Array.isArray(dataTable.noReported))
-                throw new Err(errors.typeErr);
+                throw new BotErr(errors.typeErr);
 
             dataTable.noReported.splice(
                 dataTable.noReported.indexOf(reaction.message.id),
@@ -487,9 +488,10 @@ export const utils: types.Utils = {
             isRequired[3]
         );
 
-        if (chat && !(chat instanceof TextChannel)) throw new Err(textBasedErr);
+        if (chat && !(chat instanceof TextChannel))
+            throw new BotErr(textBasedErr);
         if (logChat && !(logChat instanceof TextChannel))
-            throw new Err(textBasedErr);
+            throw new BotErr(textBasedErr);
 
         const data: Record<string, string | TextChannel | null> = {
             presetName,
@@ -528,7 +530,7 @@ const subCommands: Factory<types.SubCommands> = () => {
                 utils.receiveData(interaction, [true, true, true]).val;
 
             if (!chat || !logChat || !receivedEmoji)
-                throw new Err(noReceivedRequiredParams);
+                throw new BotErr(noReceivedRequiredParams);
 
             const sanitizedEmoji = filter.sanitizeEmoji(receivedEmoji).val;
             const emojiId = sanitizedEmoji.filteredEmoji.id;
@@ -591,7 +593,7 @@ const subCommands: Factory<types.SubCommands> = () => {
                         { presetName: receivedData.presetName }
                     );
 
-                    throw new Err({
+                    throw new BotErr({
                         message: getMessage.val,
                         origin: ErrorOrigin.User,
                         kind: ErrorKind.GhostEditing,
@@ -607,7 +609,7 @@ const subCommands: Factory<types.SubCommands> = () => {
                         receivedData.receivedEmoji
                     )
                 ) {
-                    throw new Err({
+                    throw new BotErr({
                         message:
                             messages.commands.mod.autoreport.warns
                                 .minimalOptionalParam,
@@ -654,7 +656,7 @@ const subCommands: Factory<types.SubCommands> = () => {
 
             const newObj = editedPreset;
             if (!newObj)
-                throw new Err({
+                throw new BotErr({
                     message:
                         "Algo de errado aconteceu! O editPreset não retornou o objeto.",
                     origin: ErrorOrigin.Internal,
@@ -664,7 +666,7 @@ const subCommands: Factory<types.SubCommands> = () => {
             if (typeof newObj.emoji === "string") {
                 var sanitizedEmoji = filter.sanitizeEmoji(newObj.emoji).val;
             } else {
-                throw new Err({
+                throw new BotErr({
                     message:
                         "Something is wrong! The emoji cannot be sanitized.",
                     origin: ErrorOrigin.Internal,
@@ -684,7 +686,7 @@ const subCommands: Factory<types.SubCommands> = () => {
                     newObj.emojiID !== undefined &&
                     typeof newObj.emojiID !== "string")
             )
-                throw new Err({
+                throw new BotErr({
                     message:
                         "Something is wrong! One of the IDs is not a Snowflake.",
                     origin: ErrorOrigin.Internal,
@@ -709,7 +711,7 @@ const subCommands: Factory<types.SubCommands> = () => {
                     { receivedEmoji: receivedData.receivedEmoji }
                 );
 
-                throw new Err({
+                throw new BotErr({
                     message: getMessage.val,
                     origin: ErrorOrigin.User,
                     kind: ErrorKind.NotFound,
@@ -808,7 +810,7 @@ export const execute: types.execute = async (interaction) => {
             response = await scomms.list(interaction);
             break;
         default:
-            throw new Err({
+            throw new BotErr({
                 message: "Nenhum subcomando foi atingido!",
                 origin: ErrorOrigin.Internal,
                 kind: ErrorKind.LogicError,

@@ -22,7 +22,7 @@ import {
 //#region           Modules
 import { Log } from "@/system/handlers/log";
 import { EmbedMessagesHandler } from "@/external/handlers/embed";
-import { Err, ErrorOrigin, ErrorKind } from "@/system/handlers/errHandlers";
+import { BotErr, ErrorOrigin, ErrorKind } from "@/system/handlers/errHandlers";
 //#endregion
 //#region           Typing
 import { types as embedTypes } from "@/external/handlers/embed";
@@ -178,7 +178,7 @@ export const utils: FactoryObj<types.Utils> = {
                 destinationChat instanceof ThreadChannel
             )
         ) {
-            throw new Err({
+            throw new BotErr({
                 message: messages.commands.mod.moveContent.warns.wrongChatType,
                 origin: ErrorOrigin.User,
                 kind: ErrorKind.TypeError,
@@ -298,7 +298,7 @@ export const utils: FactoryObj<types.Utils> = {
                     embeds: [handler.completeEmbed.embedData],
                 });
             } catch (err) {
-                throw new Err({
+                throw new BotErr({
                     message: "Ocorreu um erro ao editar a mensagem!",
                     origin: ErrorOrigin.External,
                     kind: ErrorKind.Other,
@@ -342,7 +342,7 @@ export const utils: FactoryObj<types.Utils> = {
                     lastMessageId = fetchedMessages.last()?.id;
                     delayCounter += 1;
                 } catch (err) {
-                    throw new Err({
+                    throw new BotErr({
                         message: "Ocorreu um erro na busca de mensagens!",
                         origin: ErrorOrigin.External,
                         kind: ErrorKind.Other,
@@ -460,7 +460,7 @@ export const utils: FactoryObj<types.Utils> = {
 
                             attachments.push(newAtt);
                         } catch (err) {
-                            throw new Err({
+                            throw new BotErr({
                                 message: "Ocorreu um erro ao baixar o arquivo!",
                                 origin: ErrorOrigin.External,
                                 kind: ErrorKind.Other,
@@ -474,7 +474,7 @@ export const utils: FactoryObj<types.Utils> = {
                             files: attachments,
                         });
                     } catch (err) {
-                        throw new Err({
+                        throw new BotErr({
                             message: "Ocorreu um erro ao enviar a mensagem!",
                             origin: ErrorOrigin.External,
                             kind: ErrorKind.NotSent,

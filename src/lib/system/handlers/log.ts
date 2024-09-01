@@ -8,7 +8,7 @@ import { Ok } from "ts-results";
 //#region           Modules
 import read from "@/system/factories/fs/read.f";
 import string from "@/system/factories/string.f";
-import { Err, ErrorOrigin, ErrorKind } from "@/system/handlers/errHandlers";
+import { BotErr, ErrorOrigin, ErrorKind } from "@/system/handlers/errHandlers";
 //#endregion
 //#region           Typing
 export namespace types {
@@ -86,14 +86,14 @@ export class Log {
      * @param message The message to specify if the erro is unknown.
      * @example
      * // [...]
-     * // If a Err() or Error():
+     * // If a BotErr() or Error():
      * Log.PrintErr(err);
      * // If it's unknown:
      * Log.PrintErr(err, "Something went wrong!");
      *
      */
     public static PrintErr(
-        error: Error | Err | unknown,
+        error: Error | BotErr | unknown,
         message?: string
     ): Ok<void> {
         const noPrint = process.env.NO_CONSOLE_LOG === "true";
@@ -109,7 +109,7 @@ export class Log {
             const stack = error.stack;
 
             errMsg = `${error.message}\n${stack}`;
-        } else if (error instanceof Err) {
+        } else if (error instanceof BotErr) {
             const stack =
                 error.val.origin === ErrorOrigin.Unknown
                     ? error.val.errObj
@@ -171,7 +171,7 @@ export class Log {
             if (typeof getLogMessage === "string") {
                 logMessage = getLogMessage;
             } else {
-                throw new Err({
+                throw new BotErr({
                     message: "The requested log doesn't exist!",
                     origin: ErrorOrigin.Internal,
                     kind: ErrorKind.NotFound,

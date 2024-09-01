@@ -21,7 +21,7 @@ import read from "@/system/factories/fs/read.f";
 import string from "@/system/factories/string.f";
 import {
     DefaultErr,
-    Err,
+    BotErr,
     ErrorKind,
     ErrorOrigin,
 } from "@/system/handlers/errHandlers";
@@ -194,7 +194,7 @@ export class EmbedMessagesHandler {
                             ...getBaseJSON.val,
                         };
                     } else {
-                        throw new Err({
+                        throw new BotErr({
                             message: "The embed is not an object!",
                             origin: ErrorOrigin.Internal,
                             kind: ErrorKind.TypeError,
@@ -269,7 +269,7 @@ export class EmbedMessagesHandler {
      */
     public async Update(embedData: APIEmbed): Promise<Ok<types.CompleteEmbed>> {
         if (!this.completeEmbed || !this.currentEmbed)
-            throw new Err(unmountedEmbedErr);
+            throw new BotErr(unmountedEmbedErr);
 
         this.currentEmbed = embedData;
 
@@ -303,9 +303,9 @@ export class EmbedMessagesHandler {
     ): Promise<Ok<types.CompleteEmbed>> {
         // Verify essential values
         if (!this.currentEmbed || !this.completeEmbed)
-            throw new Err(unmountedEmbedErr);
+            throw new BotErr(unmountedEmbedErr);
 
-        if (!this.currentEmbed.description) throw new Err(noDescriptionErr);
+        if (!this.currentEmbed.description) throw new BotErr(noDescriptionErr);
 
         // Edit lines
         const descLines = this.currentEmbed.description.split("\n");
