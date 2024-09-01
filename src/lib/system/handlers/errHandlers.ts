@@ -22,9 +22,9 @@ export namespace types {
     }
 
     /**
-     * A standarnized ts-results Err object.
+     * A standarnized ts-results BotErr object.
      * @example
-     * new Err({
+     * new BotErr({
      *      message: "Oh no! That's an error",
      *      type: ErrorKind
      * })
@@ -62,14 +62,8 @@ export enum ErrorOrigin {
     Unknown = "Unknown",
     User = "User",
 }
-/**
- * A standarnized ts-results Err class.
- */
-export class Err extends ErrImpl<DefaultErr> {
-    constructor(err: DefaultErr) {
-        super(err);
-    }
-}
+
+export type Result<O, E = DefaultErr> = Ok<O> | ErrImpl<E>;
 
 //#region           Variables
 const defaultErrMessage = "An error occurred during the interaction!";
@@ -159,11 +153,25 @@ export class ErrorHandler {
         };
         return factory;
     }
-    public async Healer(): Promise<Ok<void>> {
+    public Healer(): void {
         //! DEV
 
         console.log(this.error);
+    }
+}
 
-        return Ok.EMPTY;
+/**
+ * A standarnized ts-results BotErr class.
+ */
+export class BotErr extends ErrImpl<DefaultErr> {
+    constructor(err: DefaultErr) {
+        super(err);
+    }
+
+    /**
+     * Pass the error on, to deal with it on a larger scope.
+     */
+    unwrap(): never {
+        throw this;
     }
 }
