@@ -67,4 +67,7 @@ process.on("unhandledRejection", (err) => {
 });
 
 main().catch((err) => Log.PrintErr(err));
+
+delete process.env.TOKEN;
+delete process.env.CLIENT_ID;
 //#endregion
