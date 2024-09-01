@@ -193,7 +193,8 @@ const Default: Factory<types.PresetedFuns> = () => {
                             `<#${preset.logChatID}>`;
 
                         if (!preset.reactNewMessages) {
-                            embed.description += " (not reacting to new messages :x:)";
+                            embed.description +=
+                                " (not reacting to new messages :x:)";
                         }
 
                         embed.description += "\n";
