@@ -97,7 +97,7 @@ const Default: Factory<types.PresetedFuns> = () => {
                 const EmbedHandler = new EmbedMessagesHandler("reportEmbed");
 
                 const getEmbed = await EmbedHandler.Mount(embedParams);
-                const embed = getEmbed.val.embedData;
+                const embed = getEmbed.unwrap().embedData;
 
                 console.log(embed);
 
@@ -169,7 +169,7 @@ const Default: Factory<types.PresetedFuns> = () => {
                 const EmbedHandler = new EmbedMessagesHandler("listEmbed");
 
                 const getEmbed = await EmbedHandler.Mount(embedParams);
-                var embed = getEmbed.val.embedData;
+                var embed = getEmbed.unwrap().embedData;
 
                 const dataTables = await prisma.autoReportPresetInfo.findMany();
 
@@ -225,7 +225,7 @@ const Default: Factory<types.PresetedFuns> = () => {
 
                     const mountedEmbed = await EmbedHandler.Mount(embedParams);
 
-                    return Ok(mountedEmbed.val);
+                    return Ok(mountedEmbed.unwrap());
                 },
             },
         },

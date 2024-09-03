@@ -24,6 +24,7 @@ import {
     BotErr,
     ErrorKind,
     ErrorOrigin,
+    Result,
 } from "@/system/handlers/errHandlers";
 //#endregion
 //#region           Typing
@@ -245,7 +246,7 @@ export class EmbedMessagesHandler {
     public async Mount(
         embedData: UnknownObj,
         options?: types.MountingOptions
-    ): Promise<Ok<types.CompleteEmbed>> {
+    ): Promise<Result<types.CompleteEmbed>> {
         if (options && options.withBase) {
             var generatedEmbed = await this.Utils().generateEmbed(
                 embedData,
