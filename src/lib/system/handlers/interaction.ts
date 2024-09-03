@@ -90,7 +90,7 @@ export class InteractionHandler {
                     interaction
                 );
 
-                await command.val.execute(interaction);
+                (await command.val.execute(interaction)).unwrap();
             } else if (interaction.isAutocomplete()) {
                 if (!(await verify.permissions(interaction)).val) {
                     await interaction.respond([
