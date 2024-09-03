@@ -23,6 +23,7 @@ import pkg from "../package.json";
 const token = process.env.TOKEN || process.exit(1);
 const clientId = process.env.CLIENT_ID || process.exit(1);
 export const guild = process.env.GUILD_ID || process.exit(1);
+export const LOCALE = process.env.LOCALE || "en-US";
 
 export const client = general.createClient({
     token,
@@ -30,7 +31,6 @@ export const client = general.createClient({
 }).val;
 export const prisma = new PrismaClient();
 
-process.env.TZ = "America/Sao_Paulo";
 //#endregion
 //#region           Implementation
 const main = async (): Promise<Ok<void>> => {
