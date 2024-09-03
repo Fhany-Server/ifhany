@@ -10,6 +10,7 @@ import {
 } from "discord.js";
 //#endregion
 //#region               Modules
+import parse from "@/system/factories/parse.f";
 import { types as commandTypes } from "@/system/handlers/command";
 import {
     BotErr,
@@ -25,12 +26,14 @@ export namespace types {
     export type action = (
         guild: Guild,
         user: User,
-        reason: string,
-        limit: string
+        moderator: User,
+        createdAt: Date,
+        limit: string,
+        reason: string
     ) => Promise<Ok<void>>;
     export type execute = (
         interaction: ChatInputCommandInteraction
-    ) => Promise<Ok<void>>;
+    ) => Promise<Result<void>>;
 }
 //#endregion
 //#region           Variables
@@ -81,26 +84,35 @@ export const data: types.data = async () => {
             .setDMPermission(false),
     });
 };
-export const action: types.action = async (guild, user, reason, limit) => {
-    const parseLimit = (limit: string): number => {
-        //! todo
-
-        return 60;
-    };
-
+export const action: types.action = async (
+    guild,
+    user,
+    moderator,
+    createdAt,
+    limit,
+    reason
+) => {
     const member = guild.members.resolve(user.id);
 
     if (!member)
         throw new BotErr({
-        message: "Não consegui achar esse usuário!",
-        kind: ErrorKind.NotFound,
+            message: "Não consegui achar esse usuário!",
+            kind: ErrorKind.NotFound,
             origin: ErrorOrigin.Unknown,
-    });
+        });
 
-
-    const parsedLimit = parseLimit(limit);
+    const parsedLimit = parse.limitToMili(limit).unwrap();
 
     await member.timeout(parsedLimit, reason);
+
+    await new PunishmentHandler(guild).add(
+        user,
+        moderator,
+        commandName,
+        reason,
+        createdAt,
+        new Date(createdAt.getTime() + parsedLimit)
+    );
 
     return Ok.EMPTY;
 };
@@ -121,7 +133,14 @@ export const execute: types.execute = async (interaction) => {
             origin: ErrorOrigin.Unknown,
         });
 
-    await action(interaction.guild, userToMute, reason, limit);
+    await action(
+        interaction.guild,
+        userToMute,
+        interaction.user,
+        interaction.createdAt,
+        limit,
+        reason
+    );
 
     await interaction.editReply({ content: "O usuário foi punido!" });
 
