@@ -25,15 +25,17 @@ export namespace types {
     export type action = (
         guild: Guild,
         user: User,
+        moderator: User,
+        createdAt: Date,
         reason: string
     ) => Promise<Ok<void>>;
     export type execute = (
         interaction: ChatInputCommandInteraction
-    ) => Promise<Ok<void>>;
+    ) => Promise<Result<void>>;
 }
 //#endregion
 //#region           Variables
-const commandName = "mute";
+const commandName = "kick";
 //#endregion
 //#region               Implementation
 export const data: types.data = async () => {
@@ -74,8 +76,23 @@ export const data: types.data = async () => {
             .setDMPermission(false),
     });
 };
-export const action: types.action = async (guild, user, reason) => {
-    await guild.members.kick(user, reason);
+export const action: types.action = async (
+    guild,
+    user,
+    moderator,
+    createdAt,
+    reason
+) => {
+    //await guild.members.kick(user, reason);
+
+    await new PunishmentHandler(guild).add(
+        user,
+        moderator,
+        commandName,
+        reason,
+        createdAt,
+        createdAt
+    );
 
     return Ok.EMPTY;
 };
@@ -95,7 +112,13 @@ export const execute: types.execute = async (interaction) => {
             origin: ErrorOrigin.Unknown,
         });
 
-    await action(interaction.guild, userToKick, reason);
+    await action(
+        interaction.guild,
+        userToKick,
+        interaction.user,
+        interaction.createdAt,
+        reason
+    );
 
     await interaction.editReply({ content: "O usuário foi punido!" });
 
