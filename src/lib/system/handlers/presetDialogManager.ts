@@ -149,7 +149,7 @@ export class PresetDialogHandler {
         //#endregion
 
         const actionDialog = await this.interaction.editReply({
-            embeds: [embed.val.embedData],
+            embeds: [embed.unwrap().embedData],
             components: [row],
         });
 
@@ -182,7 +182,7 @@ export class PresetDialogHandler {
         ).Mount({ commandName: this.commandLabel });
 
         await this.interaction.editReply({
-            embeds: [getEmbed.val.embedData],
+            embeds: [getEmbed.unwrap().embedData],
             components: [],
             content: "",
         });
@@ -234,7 +234,7 @@ export class PresetDialogHandler {
                     await new EmbedMessagesHandler(
                         "presetDialog.presetNameDialog"
                     ).Mount({ commandLabel: this.commandLabel })
-                ).val.embedData;
+                ).unwrap().embedData;
 
                 this.interaction.editReply({
                     embeds: [embed],
@@ -265,7 +265,7 @@ export class PresetDialogHandler {
                         await new EmbedMessagesHandler(
                             "presetDialog.err.presetAlreadyExists"
                         ).Mount({ presetName })
-                    ).val.embedData;
+                    ).unwrap().embedData;
 
                     await this.interaction.editReply({
                         embeds: [embed],
@@ -379,7 +379,7 @@ export class PresetDialogHandler {
                 );
 
                 const dialog = await this.interaction.editReply({
-                    embeds: [embed.val.embedData],
+                    embeds: [embed.unwrap().embedData],
                     components: [row],
                 });
 
@@ -438,7 +438,7 @@ export class PresetDialogHandler {
                 );
 
                 const dialog = await this.interaction.editReply({
-                    embeds: [embed.val.embedData],
+                    embeds: [embed.unwrap().embedData],
                     components: [menuRow],
                 });
 
