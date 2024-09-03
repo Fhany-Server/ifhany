@@ -5,6 +5,7 @@ import fsp from "fs/promises";
 import path from "path";
 import { Ok } from "ts-results";
 import {
+    ChatInputCommandInteraction,
     Collection,
     REST,
     RESTPostAPIChatInputApplicationCommandsJSONBody,
@@ -30,7 +31,7 @@ export namespace types {
     };
     export type Command<T = SlashCommandBuilder> = {
         data: () => Promise<Ok<CommandData<T>>>;
-        execute: AnyFunction;
+        execute: (interaction: ChatInputCommandInteraction) => Promise<Result<void>>;
         autocomplete?: AnyFunction;
     };
     export type ReceivedCommand<T = SlashCommandBuilder> = {
