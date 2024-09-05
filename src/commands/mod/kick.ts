@@ -83,11 +83,11 @@ export const action: types.action = async (
     createdAt,
     reason
 ) => {
-    //await guild.members.kick(user, reason);
+    await guild.members.kick(user, reason);
 
     await new PunishmentHandler(guild).add(
-        user,
-        moderator,
+        user.id,
+        moderator.id,
         commandName,
         reason,
         createdAt,
