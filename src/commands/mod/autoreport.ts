@@ -780,7 +780,7 @@ const subCommands: Factory<types.SubCommands> = () => {
                 true
             );
 
-            return Ok(messageEmbed.val.embedData);
+            return Ok(messageEmbed.val.data);
         },
     };
     return factory;

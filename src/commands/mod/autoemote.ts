@@ -276,7 +276,7 @@ export const subActions: Factory<types.subActions> = () => {
                         await new EmbedMessagesHandler(
                             "presetDialog.getEmojiQuestion"
                         ).Mount({})
-                    ).unwrap().embedData;
+                    ).unwrap().data;
                     let receivedEmoji = (
                         await handler.DataDialog().String(emojiQuestionEmbed)
                     ).val;
@@ -287,7 +287,7 @@ export const subActions: Factory<types.subActions> = () => {
                                 await new EmbedMessagesHandler(
                                     "presetDialog.err.tooManyAttempts"
                                 ).Mount({})
-                            ).unwrap().embedData;
+                            ).unwrap().data;
 
                             interaction.editReply({
                                 embeds: [embed],
@@ -319,7 +319,7 @@ export const subActions: Factory<types.subActions> = () => {
                                 await new EmbedMessagesHandler(
                                     "errors.emojiNotFound"
                                 ).Mount({ emojiName: receivedEmoji })
-                            ).unwrap().embedData;
+                            ).unwrap().data;
 
                             embed.description += `\n\n**Você tem mais #${
                                 5 - attempt

@@ -80,7 +80,7 @@ export class InteractionHandler {
                     );
 
                     await interaction.reply({
-                        embeds: [message.val.embedData],
+                        embeds: [message.val.data],
                     });
 
                     return Ok.EMPTY;
