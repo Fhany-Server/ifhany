@@ -92,9 +92,9 @@ export const action: types.action = async (
     limit,
     reason
 ) => {
-    //await guild.members.ban(user, {
-    //    reason,
-    //});
+    await guild.members.ban(user, {
+       reason,
+    });
 
     const parsedLimit = parse.limitToMili(limit).unwrap();
 
