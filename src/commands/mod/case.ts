@@ -84,7 +84,7 @@ export const action: types.action = async (caseNumber, guild) => {
         })
     ).unwrap();
 
-    if (mountedEmbed.embedData.fields === undefined)
+    if (mountedEmbed.data.fields === undefined)
         return new BotErr({
             message:
                 "Nenhum campo foi encontrado! Há um problema no embed.json!",
@@ -93,22 +93,22 @@ export const action: types.action = async (caseNumber, guild) => {
         });
 
     if (punishment.expiresAt !== punishment.createdAt) {
-        mountedEmbed.embedData.fields.push({
+        mountedEmbed.data.fields.push({
             name: "Data Limite",
             value: expiresAtString,
             inline: true,
         });
     }
 
-    mountedEmbed.embedData.fields.push({
+    mountedEmbed.data.fields.push({
         name: "Motivo",
         value: punishment.reason,
         inline: false,
     });
 
     if (userAvatar !== null) {
-        mountedEmbed.embedData.thumbnail = {
-            url:userAvatar,
+        mountedEmbed.data.thumbnail = {
+            url: userAvatar,
         };
     }
 
@@ -132,7 +132,7 @@ export const execute: types.execute = async (interaction) => {
 
     const result = (await action(caseNumber, interaction.guild)).unwrap();
 
-    await interaction.editReply({ embeds: [result.embedData] });
+    await interaction.editReply({ embeds: [result.data] });
 
     return Ok.EMPTY;
 };

@@ -98,10 +98,6 @@ export namespace types {
         line: number;
         content: string;
     };
-    export type CompleteEmbed = {
-        embedData: APIEmbed;
-        embed: EmbedBuilder;
-    };
     export type MountingOptions = {
         withBase: boolean;
     };
@@ -117,10 +113,10 @@ export namespace types {
             withBase?: boolean
         ) => Promise<Ok<APIEmbed>>;
         /**
-         * Return the complete embed object.
+         * Mount the embed object.
          * @param embed
          */
-        getCompleteEmbed: (embed: APIEmbed) => Ok<CompleteEmbed>;
+        mountEmbed: (embed: APIEmbed) => Result<void>;
     };
 }
 //#endregion
@@ -155,20 +151,16 @@ export class EmbedMessagesHandler {
      */
     currentEmbed: APIEmbed;
     /**
-     * Completed object of the current embed.
-     * Contains the JSON data and the EmbedBuilder.
+     * The EmbedBuilder.
      */
-    completeEmbed: types.CompleteEmbed;
+    embed: EmbedBuilder;
 
     constructor(name: string) {
         this.name = name;
 
         this.embeds = defaultEmbeds;
         this.currentEmbed = {};
-        this.completeEmbed = {
-            embedData: {},
-            embed: new EmbedBuilder(),
-        };
+        this.embed = new EmbedBuilder();
     }
 
     //#region           Built-in Utilities
@@ -211,26 +203,20 @@ export class EmbedMessagesHandler {
 
                 return Ok(mountedEmbed);
             },
-            getCompleteEmbed: (embed) => {
-                const bEmbed = this.completeEmbed.embed;
-
-                if (embed.url) bEmbed.setURL(embed.url);
-                if (embed.color) bEmbed.setColor(embed.color);
-                if (embed.title) bEmbed.setTitle(embed.title);
-                if (embed.author) bEmbed.setAuthor(embed.author);
-                if (embed.footer) bEmbed.setFooter(embed.footer);
-                if (embed.image) bEmbed.setImage(embed.image.url);
+            mountEmbed: (embed) => {
+                if (embed.url) this.embed.setURL(embed.url);
+                if (embed.color) this.embed.setColor(embed.color);
+                if (embed.title) this.embed.setTitle(embed.title);
+                if (embed.author) this.embed.setAuthor(embed.author);
+                if (embed.footer) this.embed.setFooter(embed.footer);
+                if (embed.image) this.embed.setImage(embed.image.url);
                 if (embed.timestamp)
-                    bEmbed.setTimestamp(new Date(embed.timestamp));
-                if (embed.fields) bEmbed.setFields(...embed.fields);
-                if (embed.thumbnail) bEmbed.setThumbnail(embed.thumbnail.url);
-                if (embed.description) bEmbed.setDescription(embed.description);
+                    this.embed.setTimestamp(new Date(embed.timestamp));
+                if (embed.fields) this.embed.setFields(...embed.fields);
+                if (embed.thumbnail) this.embed.setThumbnail(embed.thumbnail.url);
+                if (embed.description) this.embed.setDescription(embed.description);
 
-                const embedData = bEmbed.data;
-
-                const result = { embedData, embed: bEmbed };
-                this.completeEmbed = result;
-                return Ok(result);
+                return Ok.EMPTY;
             },
         };
         return factory;
@@ -246,7 +232,7 @@ export class EmbedMessagesHandler {
     public async Mount(
         embedData: UnknownObj,
         options?: types.MountingOptions
-    ): Promise<Result<types.CompleteEmbed>> {
+    ): Promise<Result<EmbedBuilder>> {
         if (options && options.withBase) {
             var generatedEmbed = await this.Utils().generateEmbed(
                 embedData,
@@ -256,11 +242,11 @@ export class EmbedMessagesHandler {
             var generatedEmbed = await this.Utils().generateEmbed(embedData);
         }
 
-        const mountedEmbed = this.Utils().getCompleteEmbed(
+        this.Utils().mountEmbed(
             generatedEmbed.val
-        ).val;
+        ).unwrap();
 
-        return Ok(mountedEmbed);
+        return Ok(this.embed);
     }
     //#endregion
     //#region           Data Manipulation
@@ -268,18 +254,17 @@ export class EmbedMessagesHandler {
      * Update the entire embed data.
      * @param embedData
      */
-    public async Update(embedData: APIEmbed): Promise<Ok<types.CompleteEmbed>> {
-        if (!this.completeEmbed || !this.currentEmbed)
+    public async Update(embedData: APIEmbed): Promise<Ok<EmbedBuilder>> {
+        if (!this.embed || !this.currentEmbed)
             throw new BotErr(unmountedEmbedErr);
 
         this.currentEmbed = embedData;
 
-        const completeEmbed = this.Utils().getCompleteEmbed(
+        this.Utils().mountEmbed(
             this.currentEmbed
-        ).val;
-        this.completeEmbed = completeEmbed;
+        ).unwrap();
 
-        return Ok(this.completeEmbed);
+        return Ok(this.embed);
     }
     /**
      * Update a specific line of the description.
@@ -301,9 +286,9 @@ export class EmbedMessagesHandler {
      */
     public async UpdateDescLine(
         options: types.UpdateDescLineOptions
-    ): Promise<Ok<types.CompleteEmbed>> {
+    ): Promise<Ok<EmbedBuilder>> {
         // Verify essential values
-        if (!this.currentEmbed || !this.completeEmbed)
+        if (!this.currentEmbed || !this.embed)
             throw new BotErr(unmountedEmbedErr);
 
         if (!this.currentEmbed.description) throw new BotErr(noDescriptionErr);
@@ -314,11 +299,9 @@ export class EmbedMessagesHandler {
         this.currentEmbed.description = descLines.join("\n");
 
         // Update embed objects
-        const updateEmbed = await this.Update(this.currentEmbed);
+        await this.Update(this.currentEmbed);
 
-        this.completeEmbed = updateEmbed.val;
-
-        return Ok(this.completeEmbed);
+        return Ok(this.embed);
     }
     //#endregion
 }

@@ -215,7 +215,7 @@ export const utils: FactoryObj<types.Utils> = {
             );
 
             const message = await params.interaction.editReply({
-                embeds: [embed.unwrap().embedData],
+                embeds: [embed.unwrap().data],
                 components: [row],
             });
             const collector = message.createMessageComponentCollector({
@@ -264,7 +264,7 @@ export const utils: FactoryObj<types.Utils> = {
         });
 
         params.interaction.editReply({
-            embeds: [embed.unwrap().embedData],
+            embeds: [embed.unwrap().data],
             components: [],
         });
 
@@ -282,7 +282,7 @@ export const utils: FactoryObj<types.Utils> = {
             });
 
             params.interaction.editReply({
-                embeds: [initialEmbed.unwrap().embedData],
+                embeds: [initialEmbed.unwrap().data],
             });
 
             return Ok(mHandler);
@@ -295,7 +295,7 @@ export const utils: FactoryObj<types.Utils> = {
 
             try {
                 await params.interaction.editReply({
-                    embeds: [handler.completeEmbed.embedData],
+                    embeds: [handler.embed.data],
                 });
             } catch (err) {
                 throw new BotErr({

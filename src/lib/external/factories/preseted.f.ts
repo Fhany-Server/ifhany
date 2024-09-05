@@ -2,6 +2,7 @@
 //#region           External Libs
 import {
     ChatInputCommandInteraction,
+    EmbedBuilder,
     Message,
     MessageReaction,
     TextBasedChannel,
@@ -36,11 +37,11 @@ export namespace types {
                 },
                 interaction: ChatInputCommandInteraction,
                 iNeedEmbed?: boolean
-            ) => Promise<Ok<embedTypes.CompleteEmbed>>;
+            ) => Promise<Ok<EmbedBuilder>>;
             warn: {
                 missingPermission: (
                     interaction: ChatInputCommandInteraction
-                ) => Promise<Ok<embedTypes.CompleteEmbed>>;
+                ) => Promise<Ok<EmbedBuilder>>;
             };
         };
         normal: {
@@ -97,7 +98,7 @@ const Default: Factory<types.PresetedFuns> = () => {
                 const EmbedHandler = new EmbedMessagesHandler("reportEmbed");
 
                 const getEmbed = await EmbedHandler.Mount(embedParams);
-                const embed = getEmbed.unwrap().embedData;
+                const embed = getEmbed.unwrap().data;
 
                 console.log(embed);
 
@@ -142,7 +143,7 @@ const Default: Factory<types.PresetedFuns> = () => {
                 const finalEmbed = await EmbedHandler.Update(embed);
 
                 await params.logChat.send({
-                    embeds: [finalEmbed.val.embedData],
+                    embeds: [finalEmbed.val.data],
                 });
                 if (video)
                     await params.logChat.send({
@@ -169,7 +170,7 @@ const Default: Factory<types.PresetedFuns> = () => {
                 const EmbedHandler = new EmbedMessagesHandler("listEmbed");
 
                 const getEmbed = await EmbedHandler.Mount(embedParams);
-                var embed = getEmbed.unwrap().embedData;
+                var embed = getEmbed.unwrap().data;
 
                 const dataTables = await prisma.autoReportPresetInfo.findMany();
 
