@@ -102,7 +102,7 @@ const subCommands: Factory<types.SubCommands> = () => {
         list: async (guild, user, pageNumber) => {
             const casesPerPage = 5;
             const punishments = (
-                await new PunishmentHandler(guild).getUserPunishments(user)
+                await new PunishmentHandler(guild).getUserPunishments(user.id)
             ).unwrap();
             const totalPages = Math.ceil(punishments.length / casesPerPage);
 

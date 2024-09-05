@@ -1,6 +1,6 @@
 /** @format */
 
-import { Guild, User } from "discord.js";
+import { Guild, Snowflake, User } from "discord.js";
 import { Ok } from "ts-results";
 import { prisma } from "//index";
 import { UserPunishment } from "@prisma/client";
@@ -19,8 +19,8 @@ export class PunishmentHandler {
     }
 
     public async add(
-        user: User,
-        moderator: User,
+        userId: Snowflake,
+        moderatorId: Snowflake,
         type: string,
         reason: string,
         createdAt: Date,
@@ -52,8 +52,8 @@ export class PunishmentHandler {
                 type,
                 reason,
                 guildId: this.guild.id,
-                userId: user.id,
-                moderatorId: moderator.id,
+                userId,
+                moderatorId,
             },
         });
 
@@ -66,10 +66,12 @@ export class PunishmentHandler {
      * @returns A promise that resolves with an
      * array of punishments if no error occurs, otherwise a BotErr.
      */
-    public async getUserPunishments(user: User): Promise<Result<UserPunishment[]>> {
+    public async getUserPunishments(
+        userId: Snowflake
+    ): Promise<Result<UserPunishment[]>> {
         const punishments = await prisma.userPunishment.findMany({
             where: {
-                userId: user.id,
+                userId,
                 guildId: this.guild.id,
             },
         });

@@ -99,8 +99,8 @@ export const action: types.action = async (
     const parsedLimit = parse.limitToMili(limit).unwrap();
 
     await new PunishmentHandler(guild).add(
-        user,
-        moderator,
+        user.id,
+        moderator.id,
         commandName,
         reason,
         createdAt,

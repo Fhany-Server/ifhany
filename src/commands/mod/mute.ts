@@ -106,8 +106,8 @@ export const action: types.action = async (
     await member.timeout(parsedLimit, reason);
 
     await new PunishmentHandler(guild).add(
-        user,
-        moderator,
+        user.id,
+        moderator.id,
         commandName,
         reason,
         createdAt,
