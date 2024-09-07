@@ -3,6 +3,7 @@
 import { Ok } from "ts-results";
 import {
     ChatInputCommandInteraction,
+    EmbedBuilder,
     Guild,
     PermissionFlagsBits,
     SlashCommandBuilder,
@@ -11,7 +12,6 @@ import {
 //#region               Modules
 import {
     EmbedMessagesHandler,
-    types as embedTypes,
 } from "@/external/handlers/embed";
 import { PunishmentHandler } from "@/system/handlers/punishmentHandler";
 import {
@@ -21,6 +21,7 @@ import {
     Result,
 } from "@/system/handlers/errHandlers";
 import { types as commandTypes } from "@/system/handlers/command";
+import { LOCALE } from "../..";
 //#endregion
 //#region               Typing
 export namespace types {
@@ -28,7 +29,7 @@ export namespace types {
     export type action = (
         caseNumber: number,
         guildId: Guild
-    ) => Promise<Result<embedTypes.CompleteEmbed>>;
+    ) => Promise<Result<EmbedBuilder>>;
     export type execute = (
         interaction: ChatInputCommandInteraction
     ) => Promise<Result<void>>;
@@ -73,14 +74,15 @@ export const action: types.action = async (caseNumber, guild) => {
         await new PunishmentHandler(guild).get(caseNumber)
     ).unwrap();
 
-    const createdAtString = punishment.createdAt.toString();
-    const expiresAtString = punishment.expiresAt.toString();
-    const userAvatar = (await guild.members.fetch(punishment.userId)).avatarURL();
+    const expiresAtString = punishment.expiresAt.toLocaleString(LOCALE);
+    const userAvatar = (
+        await guild.members.fetch(punishment.userId)
+    ).avatarURL();
 
     const mountedEmbed = (
         await new EmbedMessagesHandler("info.punishmentCase").Mount({
-            createdAtString,
             ...punishment,
+            createdAt: punishment.createdAt.toISOString(),
         })
     ).unwrap();
 

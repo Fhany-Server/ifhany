@@ -37,6 +37,9 @@ export namespace types {
         list: (
             guild: Guild,
             user: User,
+            pageNumber: number,
+            createdAt: Date
+        ) => Promise<Result<APIEmbed>>;
         /**
          * Undo a punishment.
          * @param guild The guild where the punishment was given.
@@ -191,7 +194,7 @@ export const data: types.data = async () => {
 
 const subCommands: Factory<types.SubCommands> = () => {
     const factory: FactoryObj<types.SubCommands> = {
-        list: async (guild, user, pageNumber) => {
+        list: async (guild, user, pageNumber, createdAt) => {
             const casesPerPage = 5;
             const punishments = (
                 await new PunishmentHandler(guild).getUserPunishments(user.id)
@@ -203,42 +206,44 @@ const subCommands: Factory<types.SubCommands> = () => {
                     username: user.username,
                     currentPage: totalPages > 0 ? pageNumber : 0,
                     totalPages,
-                    createdAtString: new Date().toLocaleString(LOCALE),
+                    createdAt: createdAt.toISOString(),
                     authorAvatar: user.displayAvatarURL(),
                     totalCases: punishments.length,
                 })
             ).unwrap();
 
-            embed.embedData.description = "";
+            embed.data.description = "";
 
             if (totalPages === 0) {
-                embed.embedData.description =
+                embed.data.description =
                     "**Nenhum caso foi encontrado!** \n\n" +
                     "*Esse usuário só não está mais limpo que meu código... ks*";
             } else {
                 for (let i = 0; i <= punishments.length - 1; i++) {
                     const punishment = punishments[i];
 
-                    embed.embedData.description +=
+                    embed.data.description +=
                         `### Caso ${punishment.case} - ` +
                         `(${punishment.createdAt.toLocaleString(LOCALE)})\n`;
-                    embed.embedData.description += `**Tipo**: \`${punishment.type}\`\n`;
-                    embed.embedData.description +=
+                    embed.data.description += `**Tipo**: \`${punishment.type}\`\n`;
+                    embed.data.description +=
                         `**Usuário**: <@${punishment.userId}> ` +
                         `(${punishment.userId})\n`;
-                    embed.embedData.description +=
+                    embed.data.description +=
                         `**Moderador**: <@${punishment.moderatorId}> ` +
                         `(${punishment.moderatorId})\n`;
-                    embed.embedData.description += `**Motivo**: ${punishment.reason}\n`;
+                    embed.data.description += `**Motivo**: ${punishment.reason}\n`;
 
                     if (punishment.expiresAt !== punishment.createdAt) {
-                        embed.embedData.description +=
+                        embed.data.description +=
                             `**Data Limite**: ` +
                             `${punishment.expiresAt.toLocaleString(LOCALE)}\n`;
                     }
                 }
             }
 
+            return Ok(embed.data);
+        },
         undo: async (guild, interactionUser, caseNumber, reason, createdAt) => {
             const originalPunishment = (
                 await new PunishmentHandler(guild).edit(caseNumber, {
