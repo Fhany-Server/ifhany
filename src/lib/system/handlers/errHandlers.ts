@@ -78,7 +78,7 @@ export const errors: Record<string, DefaultErr> = {
         message: "O valor recebido não é do tipo requerido!",
         origin: ErrorOrigin.Internal,
         kind: ErrorKind.TypeError,
-    }
+    },
 };
 //#endregion
 //#region           Implementation
@@ -114,7 +114,8 @@ export class ErrorHandler {
             warnDeveloper: async () => {
                 var message: string;
 
-                if (this.error instanceof BotErr) message = this.error.val.message;
+                if (this.error instanceof BotErr)
+                    message = this.error.val.message;
                 else if (this.error instanceof Error)
                     message = this.error.message;
                 else message = defaultErrMessage;

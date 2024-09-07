@@ -35,10 +35,9 @@ model Guild {
     cases UserPunishment[] @relation
 }
 
-
 model User {
-    id                  String @id @map("_id")
-    isModerator         Boolean
+    id          String  @id @map("_id")
+    isModerator Boolean
 
     appliedPunishments  UserPunishment[] @relation("AppliedPunishment")
     sufferedPunishments UserPunishment[] @relation("SufferedPunishment")
@@ -56,18 +55,18 @@ enum PunishmentType {
 }
 
 model UserPunishment {
-    case        Int         @id @map("_id")
-    createdAt   DateTime
-    expiresAt   DateTime
-    reason      String
-    type        String
+    case      Int      @id @map("_id")
+    createdAt DateTime
+    expiresAt DateTime
+    reason    String
+    type      PunishmentType
 
-    moderatorId String      @unique
-    moderator   User        @relation("AppliedPunishment", fields: [moderatorId], references: [id])
+    moderatorId String @unique
+    moderator   User   @relation("AppliedPunishment", fields: [moderatorId], references: [id])
 
-    userId      String      @unique
-    user        User        @relation("SufferedPunishment", fields: [userId], references: [id])
+    userId String @unique
+    user   User   @relation("SufferedPunishment", fields: [userId], references: [id])
 
-    guildId     String      @unique
-    guild       Guild       @relation(fields: [guildId], references: [id])
+    guildId String @unique
+    guild   Guild  @relation(fields: [guildId], references: [id])
 }
