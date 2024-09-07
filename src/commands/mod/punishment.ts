@@ -34,6 +34,14 @@ export namespace types {
         interaction: ChatInputCommandInteraction
     ) => Promise<Result<void>>;
     export type SubCommands = {
+        /**
+         * List all punishments of a user.
+         * @param guild The guild of the punishments.
+         * @param user The user to get the punishments of.
+         * @param pageNumber The page number of the list.
+         * @param createdAt The date of the list.
+         * @returns A promise that resolves with an APIEmbed if no error occurs, otherwise a BotErr.
+         */
         list: (
             guild: Guild,
             user: User,

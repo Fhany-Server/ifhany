@@ -18,6 +18,17 @@ export class PunishmentHandler {
         this.guild = guild;
     }
 
+    /**
+     * Adds a punishment to a user.
+     * @param userId The ID of the user to punish.
+     * @param moderatorId The ID of the moderator who is punishing.
+     * @param type The type of punishment.
+     * @param reason The reason why the user is being punished.
+     * @param createdAt The time when the punishment is created.
+     * @param expiresAt The time when the punishment expires.
+     * @returns A promise that resolves with an Ok containing
+     * void if no error occurs, otherwise a BotErr.
+     */
     public async add(
         userId: Snowflake,
         moderatorId: Snowflake,
@@ -80,6 +91,12 @@ export class PunishmentHandler {
         return Ok(punishments);
     }
 
+    /**
+     * Get a punishment by its case number.
+     * @param caseNumber The case number of the punishment to get.
+     * @returns A promise that resolves with an Ok containing the punishment if no error occurs,
+     * otherwise a BotErr.
+     */
     public async get(caseNumber: number): Promise<Result<UserPunishment>> {
         const getPunishment = await prisma.userPunishment.findFirst({
             where: { case: caseNumber, guildId: this.guild.id },
