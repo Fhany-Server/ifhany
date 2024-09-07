@@ -60,6 +60,7 @@ model UserPunishment {
     expiresAt DateTime
     reason    String
     type      PunishmentType
+    undone    Boolean
 
     moderatorId String @unique
     moderator   User   @relation("AppliedPunishment", fields: [moderatorId], references: [id])
