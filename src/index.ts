@@ -23,6 +23,7 @@ import pkg from "../package.json";
 const token = process.env.TOKEN || process.exit(1);
 const clientId = process.env.CLIENT_ID || process.exit(1);
 export const guild = process.env.GUILD_ID || process.exit(1);
+export const DEVELOPER_ID = process.env.DEVELOPER_ID || process.exit(1);
 export const LOCALE = process.env.LOCALE || "en-US";
 
 export const client = general.createClient({

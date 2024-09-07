@@ -5,7 +5,7 @@ import { ErrImpl, Ok } from "ts-results";
 //#endregion
 //#region           Modules
 import { Log } from "@/system/handlers/log";
-import { client } from "//index";
+import { client, DEVELOPER_ID } from "//index";
 import { Interaction } from "discord.js";
 //#endregion
 //#region           Typing
@@ -133,7 +133,7 @@ export class ErrorHandler {
                 // Warn Developer
                 try {
                     const devUser = await client.users.fetch(
-                        "855638247937409065"
+                        DEVELOPER_ID
                     );
                     await devUser.send(devMessage);
                 } catch (err) {
@@ -154,10 +154,14 @@ export class ErrorHandler {
         };
         return factory;
     }
-    public Healer(): void {
-        //! DEV
-
+    public Healer(interaction?: Interaction): void {
         console.log(this.error);
+
+        this.Utils().warnDeveloper();
+
+        if (interaction !== undefined) {
+            this.Utils().warnUser(interaction);
+        }
     }
 }
 
