@@ -44,6 +44,17 @@ model User {
     sufferedPunishments UserPunishment[] @relation("SufferedPunishment")
 }
 
+enum PunishmentType {
+    kick
+    warn
+    mute
+    ban
+    unkick
+    unwarn
+    unmute
+    unban
+}
+
 model UserPunishment {
     case        Int         @id @map("_id")
     createdAt   DateTime

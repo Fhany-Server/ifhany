@@ -1,9 +1,9 @@
 /** @format */
 
-import { Guild, Snowflake, User } from "discord.js";
+import { Guild, Snowflake } from "discord.js";
 import { Ok } from "ts-results";
 import { prisma } from "//index";
-import { UserPunishment } from "@prisma/client";
+import { $Enums, Prisma, UserPunishment } from "@prisma/client";
 import {
     BotErr,
     ErrorKind,
@@ -21,7 +21,7 @@ export class PunishmentHandler {
     public async add(
         userId: Snowflake,
         moderatorId: Snowflake,
-        type: string,
+        type: $Enums.PunishmentType,
         reason: string,
         createdAt: Date,
         expiresAt: Date
@@ -51,6 +51,7 @@ export class PunishmentHandler {
                 expiresAt,
                 type,
                 reason,
+                undone: false,
                 guildId: this.guild.id,
                 userId,
                 moderatorId,
@@ -92,6 +93,39 @@ export class PunishmentHandler {
                 kind: ErrorKind.NotFound,
                 origin: ErrorOrigin.User,
             });
+        }
+    }
+
+    /**
+     * Edit a punishment.
+     * @param caseNumber The case number of the punishment to edit.
+     * @param data The data to update the punishment with.
+     * @returns A promise that resolves with the edited punishment if no error occurs,
+     * otherwise a BotErr.
+     */
+    public async edit(
+        caseNumber: number,
+        data: Prisma.UserPunishmentUpdateInput
+    ): Promise<Result<UserPunishment>> {
+        try {
+            const editedPunishment = await prisma.userPunishment.update({
+                where: { case: caseNumber },
+                data,
+            });
+
+            return Ok(editedPunishment);
+        } catch (err) {
+            if (err instanceof Prisma.PrismaClientKnownRequestError) {
+                if (err.code === "P2025") {
+                    return new BotErr({
+                        message: `O caso ${caseNumber} não foi encontrado!`,
+                        kind: ErrorKind.NotFound,
+                        origin: ErrorOrigin.User,
+                    });
+                }
+            }
+
+            throw err;
         }
     }
 }
