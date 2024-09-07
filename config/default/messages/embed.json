@@ -62,8 +62,9 @@
                     "inline": true
                 }
             ],
+            "timestamp": "${createdAt}",
             "footer": {
-                "text": "ID: ${userId} • ${createdAtString}"
+                "text": "ID: ${userId}"
             }
         },
         "punishmentList": {
@@ -73,9 +74,18 @@
             "thumbnail": {
                 "url": "${authorAvatar}"
             },
-            "timestamp": "${createdAtString}",
+            "timestamp": "${createdAt}",
             "footer": {
                 "text": "${totalCases} casos • Use \"/punishment list <user> [page]\" para ver outras páginas!"
+            }
+        },
+        "simpleResponse": {
+            "title": "${title}",
+            "color": "#d202f7",
+            "description": "${description}",
+            "timestamp": "${createdAt}",
+            "footer": {
+                "text": "${username}"
             }
         }
     },
