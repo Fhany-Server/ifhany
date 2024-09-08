@@ -4,7 +4,6 @@ import { Ok } from "ts-results";
 import {
     APIEmbed,
     ChatInputCommandInteraction,
-    EmbedBuilder,
     Guild,
     PermissionFlagsBits,
     SlashCommandBuilder,
@@ -12,10 +11,7 @@ import {
 } from "discord.js";
 //#endregion
 //#region               Modules
-import {
-    EmbedMessagesHandler,
-    types as embedTypes,
-} from "@/external/handlers/embed";
+import { EmbedMessagesHandler } from "@/external/handlers/embed";
 import { PunishmentHandler } from "@/system/handlers/punishmentHandler";
 import {
     BotErr,
@@ -242,7 +238,10 @@ const subCommands: Factory<types.SubCommands> = () => {
                         `(${punishment.moderatorId})\n`;
                     embed.data.description += `**Motivo**: ${punishment.reason}\n`;
 
-                    if (punishment.expiresAt !== punishment.createdAt) {
+                    if (
+                        punishment.expiresAt.getTime() !==
+                        punishment.createdAt.getTime()
+                    ) {
                         embed.data.description +=
                             `**Data Limite**: ` +
                             `${punishment.expiresAt.toLocaleString(LOCALE)}\n`;
@@ -271,7 +270,6 @@ const subCommands: Factory<types.SubCommands> = () => {
             } else {
                 return new BotErr({
                     message:
-                        "Houve um erro na hora de identificar o tipo de punição!" +
                         "Você está tentando revogar o revogamento " +
                         "de um caso?? Isso soa engraçado...",
                     kind: ErrorKind.InvalidValue,
@@ -309,9 +307,22 @@ const subCommands: Factory<types.SubCommands> = () => {
             reason,
             createdAt
         ) => {
-            new PunishmentHandler(guild).edit(caseNumber, {
-                reason,
-            });
+            const punishment = (
+                await new PunishmentHandler(guild).get(caseNumber)
+            ).unwrap();
+
+            if (punishment.undone) {
+                return new BotErr({
+                    message:
+                        "Este caso não pode ter um motivo alterado, ele foi revogado!",
+                    kind: ErrorKind.InvalidValue,
+                    origin: ErrorOrigin.User,
+                });
+            } else {
+                new PunishmentHandler(guild).edit(caseNumber, {
+                    reason,
+                });
+            }
 
             const embed = (
                 await new EmbedMessagesHandler("info.simpleResponse").Mount({
@@ -342,7 +353,6 @@ export const execute: types.execute = async (interaction) => {
 
     const scomms = subCommands();
     const subcommand = interaction.options.getSubcommand(true);
-    const user = interaction.options.getUser("user", true);
 
     const getEphemeral = interaction.options.getBoolean("ephemeral");
 

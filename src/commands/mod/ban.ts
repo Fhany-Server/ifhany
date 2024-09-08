@@ -19,6 +19,8 @@ import {
     Result,
 } from "@/system/handlers/errHandlers";
 import { PunishmentHandler } from "@/system/handlers/punishmentHandler";
+import { EmbedMessagesHandler } from "//lib/external/handlers/embed";
+import { LOCALE } from "../..";
 //#endregion
 //#region               Typing
 export namespace types {
@@ -135,7 +137,21 @@ export const execute: types.execute = async (interaction) => {
         reason
     );
 
-    await interaction.editReply({ content: "O usuário foi punido!" });
+    const embed = (
+        await new EmbedMessagesHandler("info.simpleResponse").Mount({
+            title: "Warn",
+            description:
+                `O usuário ${userToBan} foi banido com sucesso!\\n`,
+            createdAt: interaction.createdAt.toLocaleString(LOCALE),
+            username: `@${interaction.user.username}`,
+        })
+    ).unwrap();
+
+    embed.setColor("#ff0000");
+
+    await interaction.editReply({
+        embeds: [embed.data],
+    });
 
     return Ok.EMPTY;
 };

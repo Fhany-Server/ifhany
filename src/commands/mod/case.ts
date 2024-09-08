@@ -56,7 +56,7 @@ export const data: types.data = async () => {
             .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers)
             .addNumberOption((caseNumber) =>
                 caseNumber
-                    .setName("case-number")
+                    .setName("case")
                     .setDescription(description.caseNumber)
                     .setRequired(true)
             )
@@ -126,7 +126,7 @@ export const execute: types.execute = async (interaction) => {
             origin: ErrorOrigin.Unknown,
         });
 
-    const caseNumber = interaction.options.getNumber("case-number", true);
+    const caseNumber = interaction.options.getNumber("case", true);
     const getEphemeral = interaction.options.getBoolean("ephemeral");
     await interaction.deferReply({
         ephemeral: getEphemeral !== null ? getEphemeral : true,

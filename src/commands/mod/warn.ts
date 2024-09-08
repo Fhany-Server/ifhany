@@ -134,7 +134,7 @@ export const execute: types.execute = async (interaction) => {
         await new EmbedMessagesHandler("info.simpleResponse").Mount({
             title: "Warn",
             description:
-                `O usuário ${userToMute} foi mutado com sucesso!\\n`,
+                `O usuário ${userToMute} foi avisado com sucesso!\\n`,
             createdAt: interaction.createdAt.toLocaleString(LOCALE),
             username: `@${interaction.user.username}`,
         })
