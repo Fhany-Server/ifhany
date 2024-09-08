@@ -5,7 +5,7 @@ import { Message, MessageFlags, Snowflake, TextBasedChannel } from "discord.js";
 //#endregion
 //#region           Modules
 import { client } from "//index";
-import { Err, ErrorKind, ErrorOrigin } from "@/system/handlers/errHandlers";
+import { BotErr, ErrorKind, ErrorOrigin } from "@/system/handlers/errHandlers";
 //#endregion
 //#region           Typing
 export namespace types {
@@ -48,7 +48,7 @@ const Default: Factory<types.ReactionFuns> = () => {
                     if (params.customEmoji) {
                         const emoji = client.emojis.resolve(params.emoji);
                         if (!emoji)
-                            throw new Err({
+                            throw new BotErr({
                                 message:
                                     "An emoji that the preset depends on doesn't exist!",
                                 origin: ErrorOrigin.User,

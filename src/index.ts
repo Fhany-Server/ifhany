@@ -20,27 +20,18 @@ dotenv.config();
 
 import pkg from "../package.json";
 
-const tokenProd = process.env.PROD_TOKEN;
-const prodClientId = process.env.PROD_CLIENT_ID;
-const guildId = process.env.PROD_GUILD_ID;
-
-const tokenDev = process.env.DEV_TOKEN;
-const devClientId = process.env.DEV_CLIENT_ID;
-const devGuildId = process.env.DEV_GUILD_ID;
-
-const condition = process.env.DEV_MODE;
-
-export const guild = (condition ? devGuildId : guildId) || process.exit(1);
-const token = (condition ? tokenDev : tokenProd) || process.exit(1);
-const clientId = (condition ? devClientId : prodClientId) || process.exit(1);
+const token = process.env.TOKEN || process.exit(1);
+const clientId = process.env.CLIENT_ID || process.exit(1);
+export const guild = process.env.GUILD_ID || process.exit(1);
+export const DEVELOPER_ID = process.env.DEVELOPER_ID || process.exit(1);
+export const LOCALE = process.env.LOCALE || "en-US";
 
 export const client = general.createClient({
-    token: token,
+    token,
     version: pkg.version,
 }).val;
 export const prisma = new PrismaClient();
 
-process.env.TZ = "America/Sao_Paulo";
 //#endregion
 //#region           Implementation
 const main = async (): Promise<Ok<void>> => {
@@ -77,4 +68,7 @@ process.on("unhandledRejection", (err) => {
 });
 
 main().catch((err) => Log.PrintErr(err));
+
+delete process.env.TOKEN;
+delete process.env.CLIENT_ID;
 //#endregion

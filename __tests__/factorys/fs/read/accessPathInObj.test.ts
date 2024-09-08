@@ -1,7 +1,7 @@
 /** @format */
 
 import read from "@/system/factories/fs/read.f";
-import { Err } from "@/system/handlers/errHandlers";
+import { BotErr } from "@/system/handlers/errHandlers";
 
 describe("accessPathInObj", () => {
     const JSON = {
@@ -34,7 +34,7 @@ describe("accessPathInObj", () => {
         try {
             result = read.accessPathInObj("noKey", JSON);
         } catch (err) {
-            if (err instanceof Err) {
+            if (err instanceof BotErr) {
                 result = err;
             } else {
                 throw err;
@@ -51,7 +51,7 @@ describe("accessPathInObj", () => {
         try {
             result = read.accessPathInObj("noKey{0}", JSON);
         } catch (err) {
-            if (err instanceof Err) {
+            if (err instanceof BotErr) {
                 result = err;
             } else {
                 throw err;

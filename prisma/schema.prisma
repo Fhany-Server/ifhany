@@ -4,27 +4,70 @@ generator client {
 
 datasource db {
     provider = "mongodb"
-    url = env("DATABASE_URL")
+    url      = env("DATABASE_URL")
 }
 
 model AutoReportPresetInfo {
-    uuid        String @id @default(uuid()) @map("_id")
-    name        String @unique
-    chatID      String
-    logChatID   String
-    emoji       String
-    emojiID     String?
-    customEmoji Boolean
+    uuid             String  @id @default(uuid()) @map("_id")
+    name             String  @unique
+    chatID           String
+    logChatID        String
+    emoji            String
+    emojiID          String?
+    customEmoji      Boolean
+    reactNewMessages Boolean
 
-    infoUUID    String @unique
-    data        AutoReportPresetData? @relation(fields: [infoUUID], references: [uuid])
+    info AutoReportPresetData? @relation
 }
 
 model AutoReportPresetData {
-    uuid            String @id @default(uuid()) @map("_id")
-    name            String @unique
+    uuid            String   @id @default(uuid()) @map("_id")
+    name            String   @unique
     alreadyReported String[]
     noReported      String[]
 
-    info            AutoReportPresetInfo? @relation
+    infoUUID String                @unique
+    data     AutoReportPresetInfo? @relation(fields: [infoUUID], references: [uuid])
+}
+
+model Guild {
+    id    String           @id @map("_id")
+    cases UserPunishment[] @relation
+}
+
+model User {
+    id          String  @id @map("_id")
+    isModerator Boolean
+
+    appliedPunishments  UserPunishment[] @relation("AppliedPunishment")
+    sufferedPunishments UserPunishment[] @relation("SufferedPunishment")
+}
+
+enum PunishmentType {
+    kick
+    warn
+    mute
+    ban
+    unkick
+    unwarn
+    unmute
+    unban
+}
+
+model UserPunishment {
+    case      Int      @id @map("_id")
+    createdAt DateTime
+    expiresAt DateTime
+    reason    String
+    type      PunishmentType
+    undone    Boolean
+
+    moderatorId String @unique
+    moderator   User   @relation("AppliedPunishment", fields: [moderatorId], references: [id])
+
+    userId String @unique
+    user   User   @relation("SufferedPunishment", fields: [userId], references: [id])
+
+    guildId String @unique
+    guild   Guild  @relation(fields: [guildId], references: [id])
 }
