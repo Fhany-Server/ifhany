@@ -2,6 +2,7 @@
 //#region           External Libs
 import {
     ChatInputCommandInteraction,
+    EmbedBuilder,
     Message,
     MessageReaction,
     TextBasedChannel,
@@ -14,7 +15,7 @@ import react from "@/external/factories/react.f";
 import { Log } from "@/system/handlers/log";
 import { DMDialog } from "@/external/handlers/dmDialog";
 import { EmbedMessagesHandler } from "@/external/handlers/embed";
-import { Err, ErrorOrigin, ErrorKind } from "@/system/handlers/errHandlers";
+import { BotErr, ErrorOrigin, ErrorKind } from "@/system/handlers/errHandlers";
 //#endregion
 //#region           Types
 import { types as reactTypes } from "@/external/factories/react.f";
@@ -36,11 +37,11 @@ export namespace types {
                 },
                 interaction: ChatInputCommandInteraction,
                 iNeedEmbed?: boolean
-            ) => Promise<Ok<embedTypes.CompleteEmbed>>;
+            ) => Promise<Ok<EmbedBuilder>>;
             warn: {
                 missingPermission: (
                     interaction: ChatInputCommandInteraction
-                ) => Promise<Ok<embedTypes.CompleteEmbed>>;
+                ) => Promise<Ok<EmbedBuilder>>;
             };
         };
         normal: {
@@ -97,7 +98,7 @@ const Default: Factory<types.PresetedFuns> = () => {
                 const EmbedHandler = new EmbedMessagesHandler("reportEmbed");
 
                 const getEmbed = await EmbedHandler.Mount(embedParams);
-                const embed = getEmbed.val.embedData;
+                const embed = getEmbed.unwrap().data;
 
                 console.log(embed);
 
@@ -142,7 +143,7 @@ const Default: Factory<types.PresetedFuns> = () => {
                 const finalEmbed = await EmbedHandler.Update(embed);
 
                 await params.logChat.send({
-                    embeds: [finalEmbed.val.embedData],
+                    embeds: [finalEmbed.val.data],
                 });
                 if (video)
                     await params.logChat.send({
@@ -169,7 +170,7 @@ const Default: Factory<types.PresetedFuns> = () => {
                 const EmbedHandler = new EmbedMessagesHandler("listEmbed");
 
                 const getEmbed = await EmbedHandler.Mount(embedParams);
-                var embed = getEmbed.val.embedData;
+                var embed = getEmbed.unwrap().data;
 
                 const dataTables = await prisma.autoReportPresetInfo.findMany();
 
@@ -179,17 +180,25 @@ const Default: Factory<types.PresetedFuns> = () => {
                         "Não existem presets disponíveis!\n" +
                         `*Você pode criar um usando \`/${params.commandName} new\`!*`;
                 } else {
-                    for (const obj of dataTables) {
-                        embed.description += `· **${obj.name}** - `;
-    
-                        if (obj.customEmoji) {
-                            embed.description += `<:${obj.emoji}:${obj.emojiID}> - `;
+                    for (const preset of dataTables) {
+                        embed.description += `· **${preset.name}** - `;
+
+                        if (preset.customEmoji) {
+                            embed.description += `<:${preset.emoji}:${preset.emojiID}> - `;
                         } else {
-                            embed.description += `${obj.emoji} - `;
+                            embed.description += `${preset.emoji} - `;
                         }
-    
+
                         embed.description +=
-                            `<#${obj.chatID}> -> ` + `<#${obj.logChatID}>\n`;
+                            `<#${preset.chatID}> -> ` +
+                            `<#${preset.logChatID}>`;
+
+                        if (!preset.reactNewMessages) {
+                            embed.description +=
+                                " (not reacting to new messages :x:)";
+                        }
+
+                        embed.description += "\n";
                     }
                 }
 
@@ -217,7 +226,7 @@ const Default: Factory<types.PresetedFuns> = () => {
 
                     const mountedEmbed = await EmbedHandler.Mount(embedParams);
 
-                    return Ok(mountedEmbed.val);
+                    return Ok(mountedEmbed.unwrap());
                 },
             },
         },
@@ -229,7 +238,7 @@ const Default: Factory<types.PresetedFuns> = () => {
                     params.actionParams.emoji
                 );
                 if (!messageReaction)
-                    throw new Err({
+                    throw new BotErr({
                         message: "Message Reaction not found!",
                         origin: ErrorOrigin.External,
                         kind: ErrorKind.NotFound,
@@ -241,7 +250,7 @@ const Default: Factory<types.PresetedFuns> = () => {
                 const reported = messageReaction.message.author;
 
                 if (!reported)
-                    throw new Err({
+                    throw new BotErr({
                         message: "Não foi possível identificar o usuário!",
                         origin: ErrorOrigin.External,
                         kind: ErrorKind.Other,
@@ -318,7 +327,7 @@ const Default: Factory<types.PresetedFuns> = () => {
 
                     return Ok(obj);
                 } else {
-                    throw new Err({
+                    throw new BotErr({
                         message:
                             "Algo de errado aconteceu! O DMDialog enviou um objeto vazio!",
                         origin: ErrorOrigin.Internal,

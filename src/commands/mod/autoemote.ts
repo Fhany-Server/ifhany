@@ -18,7 +18,7 @@ import react from "@/external/factories/react.f";
 import filter from "@/system/factories/filter.f";
 import verify from "@/system/factories/verify.f";
 import {
-    Err,
+    BotErr,
     DefaultErr,
     ErrorKind,
     ErrorOrigin,
@@ -114,7 +114,7 @@ export const action: types.actionFunction = async (params) => {
 
         const getChat = await client.channels.fetch(params.chatID);
         if (!getChat) {
-            throw new Err({
+            throw new BotErr({
                 message: chatNotFound,
                 origin: ErrorOrigin.External,
                 kind: ErrorKind.NotFound,
@@ -123,7 +123,7 @@ export const action: types.actionFunction = async (params) => {
         if (getChat.isTextBased()) {
             chat = getChat;
         } else {
-            throw new Err({
+            throw new BotErr({
                 message: wrongTypeErr,
                 origin: ErrorOrigin.User,
                 kind: ErrorKind.TypeError,
@@ -135,7 +135,7 @@ export const action: types.actionFunction = async (params) => {
             const getEmoji = client.emojis.resolve(params.emojiID);
 
             if (!getEmoji)
-                throw new Err({
+                throw new BotErr({
                     message: emojiNotFound,
                     origin: ErrorOrigin.External,
                     kind: ErrorKind.NotFound,
@@ -171,17 +171,16 @@ export const action: types.actionFunction = async (params) => {
             const dataTable = await prisma.autoReportPresetData.findUnique({
                 where: { name: params.name },
             });
-            if (!dataTable)
-                throw new Err(errors.presetNotFound);
+            if (!dataTable) throw new BotErr(errors.presetNotFound);
 
             // Update alreadyReported messages
             if (!Array.isArray(dataTable.alreadyReported))
-                throw new Err(typeErr);
+                throw new BotErr(typeErr);
 
             dataTable.alreadyReported.push(reaction.message.id);
 
             // Update noReported messages
-            if (!Array.isArray(dataTable.noReported)) throw new Err(typeErr);
+            if (!Array.isArray(dataTable.noReported)) throw new BotErr(typeErr);
 
             dataTable.noReported.splice(
                 dataTable.noReported.indexOf(reaction.message.id),
@@ -211,7 +210,7 @@ export const action: types.actionFunction = async (params) => {
                 //     .object.data.messages;
 
                 // if (!Array.isArray(oldMessages))
-                //     throw new Err({
+                //     throw new BotErr({
                 //         message:
                 //             "The old messages array... Is not an array.",
                 //         origin: ErrorOrigin.Internal,
@@ -277,7 +276,7 @@ export const subActions: Factory<types.subActions> = () => {
                         await new EmbedMessagesHandler(
                             "presetDialog.getEmojiQuestion"
                         ).Mount({})
-                    ).val.embedData;
+                    ).unwrap().data;
                     let receivedEmoji = (
                         await handler.DataDialog().String(emojiQuestionEmbed)
                     ).val;
@@ -288,7 +287,7 @@ export const subActions: Factory<types.subActions> = () => {
                                 await new EmbedMessagesHandler(
                                     "presetDialog.err.tooManyAttempts"
                                 ).Mount({})
-                            ).val.embedData;
+                            ).unwrap().data;
 
                             interaction.editReply({
                                 embeds: [embed],
@@ -296,7 +295,7 @@ export const subActions: Factory<types.subActions> = () => {
                                 content: "",
                             });
 
-                            throw new Err({
+                            throw new BotErr({
                                 message: "Número de tentativas ultrapassado!",
                                 origin: ErrorOrigin.User,
                                 kind: ErrorKind.BlockedAction,
@@ -320,7 +319,7 @@ export const subActions: Factory<types.subActions> = () => {
                                 await new EmbedMessagesHandler(
                                     "errors.emojiNotFound"
                                 ).Mount({ emojiName: receivedEmoji })
-                            ).val.embedData;
+                            ).unwrap().data;
 
                             embed.description += `\n\n**Você tem mais #${
                                 5 - attempt
@@ -353,7 +352,7 @@ export const subActions: Factory<types.subActions> = () => {
                 };
                 await action(executionParams);
             } catch (err) {
-                if (err instanceof Err) {
+                if (err instanceof BotErr) {
                     if (err.val.kind === ErrorKind.CanceledAction) {
                         return Ok.EMPTY;
                     }
@@ -406,7 +405,7 @@ export const execute: types.execute = async (interaction) => {
             result = await sActions.list(getAction.val.interaction, handler);
             break;
         default:
-            throw new Err({
+            throw new BotErr({
                 message: "Nenhuma ação foi atingida!",
                 kind: ErrorKind.LogicError,
                 origin: ErrorOrigin.Internal,

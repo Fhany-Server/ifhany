@@ -14,7 +14,7 @@ import verify from "@/system/factories/verify.f";
 import { client } from "//index";
 import { ErrorHandler } from "@/system/handlers/errHandlers";
 import { ListenerHandler } from "@/system/handlers/listener";
-import { Err, ErrorOrigin, ErrorKind } from "@/system/handlers/errHandlers";
+import { BotErr, ErrorOrigin, ErrorKind } from "@/system/handlers/errHandlers";
 //#endregion
 //#region           Typing
 import { types as commandTypes } from "@/system/handlers/command";
@@ -46,7 +46,7 @@ export class InteractionHandler {
                 const command = client.commands.get(interaction.commandName);
 
                 if (!command) {
-                    throw new Err({
+                    throw new BotErr({
                         message:
                             "No command with the name " +
                             `${interaction.commandName} was found!`,
@@ -80,7 +80,7 @@ export class InteractionHandler {
                     );
 
                     await interaction.reply({
-                        embeds: [message.val.embedData],
+                        embeds: [message.val.data],
                     });
 
                     return Ok.EMPTY;
@@ -90,7 +90,7 @@ export class InteractionHandler {
                     interaction
                 );
 
-                await command.val.execute(interaction);
+                (await command.val.execute(interaction)).unwrap();
             } else if (interaction.isAutocomplete()) {
                 if (!(await verify.permissions(interaction)).val) {
                     await interaction.respond([
@@ -121,7 +121,7 @@ export class InteractionHandler {
             // Complete if it's an autocomplete interaction
             if (interaction.isAutocomplete()) return Ok.EMPTY;
 
-            if (err instanceof Err && err.val.origin === ErrorOrigin.User) {
+            if (err instanceof BotErr && err.val.origin === ErrorOrigin.User) {
                 if (interaction.replied || interaction.deferred) {
                     await interaction.editReply(err.val.message);
                 } else {
