@@ -6,14 +6,9 @@
     "dependencies": {
         "@prisma/client": "5.18.0",
         "anchorme": "^3.0.5",
-<<<<<<< Updated upstream
-        "axios": "^1.4.0",
-        "discord.js": "^14.14.1",
-=======
         "axios": "^1.7.3",
         "discord.js": "^14.16.3",
         "dotenv": "^16.4.5",
->>>>>>> Stashed changes
         "moment": "^2.29.4",
         "node-cache": "^5.1.2",
         "prisma": "5.18.0",
