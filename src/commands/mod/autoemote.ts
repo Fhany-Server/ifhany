@@ -18,13 +18,13 @@ import react from "@/external/factories/react.f";
 import filter from "@/system/factories/filter.f";
 import verify from "@/system/factories/verify.f";
 import {
-    Err,
+    BotErr,
     DefaultErr,
     ErrorKind,
     ErrorOrigin,
+    errors,
 } from "@/system/handlers/errHandlers";
-import { client } from "//index";
-import { DataBowlHandler } from "@/system/handlers/dataBowl";
+import { client, prisma } from "//index";
 import { ListenerHandler } from "@/system/handlers/listener";
 //#endregion
 //#region           Typing
@@ -114,7 +114,7 @@ export const action: types.actionFunction = async (params) => {
 
         const getChat = await client.channels.fetch(params.chatID);
         if (!getChat) {
-            throw new Err({
+            throw new BotErr({
                 message: chatNotFound,
                 origin: ErrorOrigin.External,
                 kind: ErrorKind.NotFound,
@@ -123,7 +123,7 @@ export const action: types.actionFunction = async (params) => {
         if (getChat.isTextBased()) {
             chat = getChat;
         } else {
-            throw new Err({
+            throw new BotErr({
                 message: wrongTypeErr,
                 origin: ErrorOrigin.User,
                 kind: ErrorKind.TypeError,
@@ -135,7 +135,7 @@ export const action: types.actionFunction = async (params) => {
             const getEmoji = client.emojis.resolve(params.emojiID);
 
             if (!getEmoji)
-                throw new Err({
+                throw new BotErr({
                     message: emojiNotFound,
                     origin: ErrorOrigin.External,
                     kind: ErrorKind.NotFound,
@@ -165,33 +165,36 @@ export const action: types.actionFunction = async (params) => {
             return Ok.EMPTY;
         }
 
-        const dataHandler = new DataBowlHandler(commandName);
-
-        // Escrita no arquivo de dados
+        // Update database
         {
-            // Adicionar no alreadyReported
-            const alreadyReported = (await dataHandler.Get(params.name)).val
-                .object.data.alreadyReported;
+            // Get data
+            const dataTable = await prisma.autoReportPresetData.findUnique({
+                where: { name: params.name },
+            });
+            if (!dataTable) throw new BotErr(errors.presetNotFound);
 
-            if (!Array.isArray(alreadyReported)) throw new Err(typeErr);
+            // Update alreadyReported messages
+            if (!Array.isArray(dataTable.alreadyReported))
+                throw new BotErr(typeErr);
 
-            alreadyReported.push(reaction.message.id);
+            dataTable.alreadyReported.push(reaction.message.id);
 
-            await dataHandler.Set(
-                params.name,
-                alreadyReported,
-                "alreadyReported"
+            // Update noReported messages
+            if (!Array.isArray(dataTable.noReported)) throw new BotErr(typeErr);
+
+            dataTable.noReported.splice(
+                dataTable.noReported.indexOf(reaction.message.id),
+                1
             );
 
-            // Remover do messages
-            const messages = (await dataHandler.Get(params.name)).val.object
-                .data.messages;
-
-            if (!Array.isArray(messages)) throw new Err(typeErr);
-
-            messages.splice(messages.indexOf(reaction.message.id), 1);
-
-            await dataHandler.Set(params.name, messages, "messages");
+            // Apply
+            await prisma.autoReportPresetData.update({
+                where: { name: params.name },
+                data: {
+                    alreadyReported: dataTable.alreadyReported,
+                    noReported: dataTable.noReported,
+                },
+            });
         }
 
         return Ok.EMPTY;
@@ -199,32 +202,31 @@ export const action: types.actionFunction = async (params) => {
 
     // Create Listeners
     {
-        const middleActionOnFirstReaction: reactTypes.MiddleAction = async (
-            message
-        ) => {
-            // const DataHandler = new DataBowlHandler(commandName);
+        const middleActionOnFirstReaction: reactTypes.ActionBeforeReact =
+            async (message) => {
+                // const DataHandler = new DataBowlHandler(commandName);
 
-            // const oldMessages = (await DataHandler.Get(params.name)).val
-            //     .object.data.messages;
+                // const oldMessages = (await DataHandler.Get(params.name)).val
+                //     .object.data.messages;
 
-            // if (!Array.isArray(oldMessages))
-            //     throw new Err({
-            //         message:
-            //             "The old messages array... Is not an array.",
-            //         origin: ErrorOrigin.Internal,
-            //         kind: ErrorKind.TypeError,
-            //     });
+                // if (!Array.isArray(oldMessages))
+                //     throw new BotErr({
+                //         message:
+                //             "The old messages array... Is not an array.",
+                //         origin: ErrorOrigin.Internal,
+                //         kind: ErrorKind.TypeError,
+                //     });
 
-            // await DataHandler.Set(
-            //     params.name,
-            //     [...oldMessages, message.id],
-            //     "messages"
-            // );
+                // await DataHandler.Set(
+                //     params.name,
+                //     [...oldMessages, message.id],
+                //     "messages"
+                // );
 
-            // Do nothing yet
+                // Do nothing yet
 
-            return Ok.EMPTY;
-        };
+                return Ok.EMPTY;
+            };
 
         const actionOnFirstReaction = await react.reactOnNewMessage(
             executionParams,
@@ -274,7 +276,7 @@ export const subActions: Factory<types.subActions> = () => {
                         await new EmbedMessagesHandler(
                             "presetDialog.getEmojiQuestion"
                         ).Mount({})
-                    ).val.embedData;
+                    ).unwrap().data;
                     let receivedEmoji = (
                         await handler.DataDialog().String(emojiQuestionEmbed)
                     ).val;
@@ -285,7 +287,7 @@ export const subActions: Factory<types.subActions> = () => {
                                 await new EmbedMessagesHandler(
                                     "presetDialog.err.tooManyAttempts"
                                 ).Mount({})
-                            ).val.embedData;
+                            ).unwrap().data;
 
                             interaction.editReply({
                                 embeds: [embed],
@@ -293,7 +295,7 @@ export const subActions: Factory<types.subActions> = () => {
                                 content: "",
                             });
 
-                            throw new Err({
+                            throw new BotErr({
                                 message: "Número de tentativas ultrapassado!",
                                 origin: ErrorOrigin.User,
                                 kind: ErrorKind.BlockedAction,
@@ -317,7 +319,7 @@ export const subActions: Factory<types.subActions> = () => {
                                 await new EmbedMessagesHandler(
                                     "errors.emojiNotFound"
                                 ).Mount({ emojiName: receivedEmoji })
-                            ).val.embedData;
+                            ).unwrap().data;
 
                             embed.description += `\n\n**Você tem mais #${
                                 5 - attempt
@@ -350,7 +352,7 @@ export const subActions: Factory<types.subActions> = () => {
                 };
                 await action(executionParams);
             } catch (err) {
-                if (err instanceof Err) {
+                if (err instanceof BotErr) {
                     if (err.val.kind === ErrorKind.CanceledAction) {
                         return Ok.EMPTY;
                     }
@@ -403,7 +405,7 @@ export const execute: types.execute = async (interaction) => {
             result = await sActions.list(getAction.val.interaction, handler);
             break;
         default:
-            throw new Err({
+            throw new BotErr({
                 message: "Nenhuma ação foi atingida!",
                 kind: ErrorKind.LogicError,
                 origin: ErrorOrigin.Internal,

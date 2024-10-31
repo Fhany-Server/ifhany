@@ -1,14 +1,13 @@
 /** @format */
 //#region           External Lib
-
-
-import { REST } from "discord.js";
+import * as dotenv from "dotenv";
 import { Ok } from "ts-results";
+import { REST } from "discord.js";
+import { PrismaClient } from "@prisma/client";
 //#endregion
 //#region           Modules
 import general from "@/system/factories/general.f";
 import { Log } from "@/system/handlers/log";
-import { PresetHandler } from "@/system/handlers/presetHandler";
 import { CommandHandler } from "@/system/handlers/command";
 import { PermissionsHandler } from "@/system/handlers/permission";
 import { InteractionHandler } from "@/system/handlers/interaction";
@@ -17,29 +16,22 @@ import { InteractionHandler } from "@/system/handlers/interaction";
 import { ListenerHandler } from "@/system/handlers/listener";
 //#endregion
 //#region           Variables
+dotenv.config();
+
 import pkg from "../package.json";
-import {
-    prodClientId,
-    guildId,
-    tokenProd,
-    devClientId,
-    devGuildId,
-    tokenDev,
-} from "../configs.json";
-import { DataBowlHandler } from "@/system/handlers/dataBowl";
 
-const condition = process.env.DEV_MODE;
-
-export const guild = condition ? devGuildId : guildId;
-const token = condition ? tokenDev : tokenProd;
-const clientId = condition ? devClientId : prodClientId;
+const token = process.env.TOKEN || process.exit(1);
+const clientId = process.env.CLIENT_ID || process.exit(1);
+export const guild = process.env.GUILD_ID || process.exit(1);
+export const DEVELOPER_ID = process.env.DEVELOPER_ID || process.exit(1);
+export const LOCALE = process.env.LOCALE || "en-US";
 
 export const client = general.createClient({
-    token: token,
+    token,
     version: pkg.version,
 }).val;
+export const prisma = new PrismaClient();
 
-process.env.TZ = "America/Sao_Paulo";
 //#endregion
 //#region           Implementation
 const main = async (): Promise<Ok<void>> => {
@@ -58,15 +50,13 @@ const main = async (): Promise<Ok<void>> => {
 
     // Ensure the databases and their files
     {
-        await new PresetHandler("none").EnsureDataExistence();
-        await new DataBowlHandler("none").EnsureDataExistence();
         await new PermissionsHandler().EnsureCommandsPermissions();
     }
     // Initializate listeners and other essential stuff
     {
         InteractionHandler.LaunchListener();
         ListenerHandler.PredefinedListeners();
-        await PresetHandler.InitializateAll();
+        //await PresetHandler.InitializateAll();
     }
 
     new Log("success.endOfMain").Print();
@@ -78,4 +68,7 @@ process.on("unhandledRejection", (err) => {
 });
 
 main().catch((err) => Log.PrintErr(err));
+
+delete process.env.TOKEN;
+delete process.env.CLIENT_ID;
 //#endregion

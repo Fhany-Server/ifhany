@@ -2,6 +2,7 @@
 //#region           External Libs
 import {
     ChatInputCommandInteraction,
+    EmbedBuilder,
     Message,
     MessageReaction,
     TextBasedChannel,
@@ -13,15 +14,14 @@ import { Ok } from "ts-results";
 import react from "@/external/factories/react.f";
 import { Log } from "@/system/handlers/log";
 import { DMDialog } from "@/external/handlers/dmDialog";
-import { PresetHandler } from "@/system/handlers/presetHandler";
 import { EmbedMessagesHandler } from "@/external/handlers/embed";
-import { Err, ErrorOrigin, ErrorKind } from "@/system/handlers/errHandlers";
+import { BotErr, ErrorOrigin, ErrorKind } from "@/system/handlers/errHandlers";
 //#endregion
 //#region           Types
 import { types as reactTypes } from "@/external/factories/react.f";
 import { types as embedTypes } from "@/external/handlers/embed";
-import { types as presetTypes } from "@/system/components/preset";
 import { types as autoReportTypes } from ">/mod/autoreport";
+import { prisma } from "//index";
 export namespace types {
     export type PresetedFuns = {
         embed: {
@@ -34,15 +34,14 @@ export namespace types {
             sendListMessage: (
                 params: {
                     commandName: string;
-                    presetList: presetTypes.PresetInfo[];
                 },
                 interaction: ChatInputCommandInteraction,
                 iNeedEmbed?: boolean
-            ) => Promise<Ok<embedTypes.CompleteEmbed>>;
+            ) => Promise<Ok<EmbedBuilder>>;
             warn: {
                 missingPermission: (
                     interaction: ChatInputCommandInteraction
-                ) => Promise<Ok<embedTypes.CompleteEmbed>>;
+                ) => Promise<Ok<EmbedBuilder>>;
             };
         };
         normal: {
@@ -52,7 +51,7 @@ export namespace types {
                 params: {
                     action: AnyFunction;
                     actionParams: autoReportTypes.PresetParams;
-                    middleAction: reactTypes.MiddleAction
+                    middleAction: reactTypes.ActionBeforeReact;
                 }
             ) => Promise<Ok<embedTypes.ReportReason | false>>;
         };
@@ -99,7 +98,7 @@ const Default: Factory<types.PresetedFuns> = () => {
                 const EmbedHandler = new EmbedMessagesHandler("reportEmbed");
 
                 const getEmbed = await EmbedHandler.Mount(embedParams);
-                const embed = getEmbed.val.embedData;
+                const embed = getEmbed.unwrap().data;
 
                 console.log(embed);
 
@@ -144,7 +143,7 @@ const Default: Factory<types.PresetedFuns> = () => {
                 const finalEmbed = await EmbedHandler.Update(embed);
 
                 await params.logChat.send({
-                    embeds: [finalEmbed.val.embedData],
+                    embeds: [finalEmbed.val.data],
                 });
                 if (video)
                     await params.logChat.send({
@@ -171,33 +170,36 @@ const Default: Factory<types.PresetedFuns> = () => {
                 const EmbedHandler = new EmbedMessagesHandler("listEmbed");
 
                 const getEmbed = await EmbedHandler.Mount(embedParams);
-                var embed = getEmbed.val.embedData;
+                var embed = getEmbed.unwrap().data;
 
-                for (const obj of params.presetList) {
-                    var receivedPreset = await new PresetHandler(
-                        params.commandName
-                    ).Get(obj.name);
+                const dataTables = await prisma.autoReportPresetInfo.findMany();
 
-                    var preset = receivedPreset.val.object
-                        .data as autoReportTypes.ReceivedStoredParams;
-
-                    embed.description += `· **${obj.name}** - `;
-
-                    if (preset.customEmoji) {
-                        embed.description += `<:${preset.emoji}:${preset.emojiID}> - `;
-                    } else {
-                        embed.description += `${preset.emoji} - `;
-                    }
-
-                    embed.description +=
-                        `<#${preset.chatID}> -> ` + `<#${preset.logChatID}>\n`;
-                }
-
-                if (params.presetList.length === 0) {
+                if (dataTables.length === 0) {
                     embed.title = "Vish...";
                     embed.description =
                         "Não existem presets disponíveis!\n" +
                         `*Você pode criar um usando \`/${params.commandName} new\`!*`;
+                } else {
+                    for (const preset of dataTables) {
+                        embed.description += `· **${preset.name}** - `;
+
+                        if (preset.customEmoji) {
+                            embed.description += `<:${preset.emoji}:${preset.emojiID}> - `;
+                        } else {
+                            embed.description += `${preset.emoji} - `;
+                        }
+
+                        embed.description +=
+                            `<#${preset.chatID}> -> ` +
+                            `<#${preset.logChatID}>`;
+
+                        if (!preset.reactNewMessages) {
+                            embed.description +=
+                                " (not reacting to new messages :x:)";
+                        }
+
+                        embed.description += "\n";
+                    }
                 }
 
                 const mountedEmbed = await EmbedHandler.Update(embed);
@@ -224,7 +226,7 @@ const Default: Factory<types.PresetedFuns> = () => {
 
                     const mountedEmbed = await EmbedHandler.Mount(embedParams);
 
-                    return Ok(mountedEmbed.val);
+                    return Ok(mountedEmbed.unwrap());
                 },
             },
         },
@@ -236,7 +238,7 @@ const Default: Factory<types.PresetedFuns> = () => {
                     params.actionParams.emoji
                 );
                 if (!messageReaction)
-                    throw new Err({
+                    throw new BotErr({
                         message: "Message Reaction not found!",
                         origin: ErrorOrigin.External,
                         kind: ErrorKind.NotFound,
@@ -248,7 +250,7 @@ const Default: Factory<types.PresetedFuns> = () => {
                 const reported = messageReaction.message.author;
 
                 if (!reported)
-                    throw new Err({
+                    throw new BotErr({
                         message: "Não foi possível identificar o usuário!",
                         origin: ErrorOrigin.External,
                         kind: ErrorKind.Other,
@@ -325,7 +327,7 @@ const Default: Factory<types.PresetedFuns> = () => {
 
                     return Ok(obj);
                 } else {
-                    throw new Err({
+                    throw new BotErr({
                         message:
                             "Algo de errado aconteceu! O DMDialog enviou um objeto vazio!",
                         origin: ErrorOrigin.Internal,

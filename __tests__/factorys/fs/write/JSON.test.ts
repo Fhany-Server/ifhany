@@ -2,7 +2,7 @@
 //#region           External Libs
 import fs from "fs/promises";
 import sinon from "sinon";
-import { Err } from "@/system/handlers/errHandlers";
+import { BotErr } from "@/system/handlers/errHandlers";
 //#endregion
 //#region           Modules
 import write from "@/system/factories/fs/write.f";
@@ -38,7 +38,7 @@ describe("JSON", () => {
 
             if (result.ok) throw result;
         } catch (err) {
-            if (err instanceof Err) {
+            if (err instanceof BotErr) {
                 result = err;
             } else {
                 throw err;

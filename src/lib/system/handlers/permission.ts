@@ -10,7 +10,7 @@ import { Snowflake } from "discord.js";
 import write from "@/system/factories/fs/write.f";
 import read from "@/system/factories/fs/read.f";
 import { Log } from "@/system/handlers/log";
-import { Err, ErrorOrigin, ErrorKind } from "@/system/handlers/errHandlers";
+import { BotErr, ErrorOrigin, ErrorKind } from "@/system/handlers/errHandlers";
 //#endregion
 //#region           Typing
 export namespace types {
@@ -56,7 +56,7 @@ export class PermissionsHandler {
         this._configs = {};
         this._configs_dir = path.resolve(
             __dirname,
-            "../../../../data/default/permissions.json"
+            "../../../../../config/default/permissions.json"
         );
     }
     //#region           Data Manipulation
@@ -122,7 +122,7 @@ export class PermissionsHandler {
         const rolePermissions = await gld.roles.fetch(minViewer);
 
         if (!rolePermissions)
-            throw new Err({
+            throw new BotErr({
                 message: `The role with the id: ${minViewer} was not found!`,
                 origin: ErrorOrigin.Internal,
                 kind: ErrorKind.NotFound,
@@ -153,7 +153,7 @@ export class PermissionsHandler {
 
         const gld = await client.guilds.fetch(guild);
         if (!gld)
-            throw new Err({
+            throw new BotErr({
                 message: `The guild with the id: ${guild} was not found!`,
                 origin: ErrorOrigin.Internal,
                 kind: ErrorKind.NotFound,
@@ -163,7 +163,7 @@ export class PermissionsHandler {
             if (allowed === "public") return Ok(true);
             else if (allowed === "private") return Ok(false);
             else {
-                throw new Err({
+                throw new BotErr({
                     message: "The allowed property of the command is invalid!",
                     origin: ErrorOrigin.Internal,
                     kind: ErrorKind.InvalidValue,
@@ -171,7 +171,7 @@ export class PermissionsHandler {
             }
         } else if (Array.isArray(allowed)) {
             var roles = [];
-            for (let i = 0; i <= allowed.length; i++) {
+            for (let i = 0; i < allowed.length; i++) {
                 const roleObj = await gld.roles.fetch(allowed[i]);
 
                 if (roleObj !== null) {
@@ -180,7 +180,7 @@ export class PermissionsHandler {
                     const message = `The role with the id: ${allowed[i]} was not found!`;
 
                     Log.PrintErr(
-                        new Err({
+                        new BotErr({
                             message,
                             origin: ErrorOrigin.Internal,
                             kind: ErrorKind.NotFound,
@@ -191,7 +191,7 @@ export class PermissionsHandler {
 
             return new Ok(roles);
         } else {
-            throw new Err({
+            throw new BotErr({
                 message:
                     "The allowed property of the command is not a string or an array!",
                 origin: ErrorOrigin.Internal,

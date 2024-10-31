@@ -3,7 +3,7 @@
 import { Ok } from "ts-results";
 //#endregion
 //#region           Modules
-import { Err, ErrorKind, ErrorOrigin } from "@/system/handlers/errHandlers";
+import { BotErr, ErrorKind, ErrorOrigin } from "@/system/handlers/errHandlers";
 //#endregion
 //#region           Typing
 export namespace types {
@@ -43,13 +43,13 @@ const Default: Factory<types.Functions> = () => {
             } else {
                 if (typeof receivedValue === "object") {
                     if (!receivedValue) {
-                        throw new Err({
+                        throw new BotErr({
                             message: `The part ${receivedKey} is null or undefined!`,
                             origin: ErrorOrigin.Internal,
                             kind: ErrorKind.NullishValue,
                         });
                     } else if (Object.keys(receivedValue).length === 0) {
-                        throw new Err({
+                        throw new BotErr({
                             message: `The part ${receivedKey} is empty!`,
                             origin: ErrorOrigin.Internal,
                             kind: ErrorKind.EmptyValue,
@@ -60,7 +60,7 @@ const Default: Factory<types.Functions> = () => {
                         } else if (receivedKey === "length") {
                             finalValue = receivedValue.length;
                         } else {
-                            throw new Err({
+                            throw new BotErr({
                                 message:
                                     `Type of the part "${receivedKey}" ` +
                                     "is not valid for accessing an array!",
@@ -73,7 +73,7 @@ const Default: Factory<types.Functions> = () => {
                             (entry) => entry[0] === receivedKey
                         );
                         if (!findValue) {
-                            throw new Err({
+                            throw new BotErr({
                                 message: `The part ${receivedKey} doesn't exist!`,
                                 origin: ErrorOrigin.Internal,
                                 kind: ErrorKind.NotFound,
@@ -87,7 +87,7 @@ const Default: Factory<types.Functions> = () => {
                         }
                     }
                 } else {
-                    throw new Err({
+                    throw new BotErr({
                         message:
                             "You're trying to access a" +
                             "value that is not an object!",

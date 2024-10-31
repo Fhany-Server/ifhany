@@ -14,7 +14,7 @@ import {
 } from "discord.js";
 //#endregion
 //#region           Modules
-import { Err, ErrorKind, ErrorOrigin } from "@/system/handlers/errHandlers";
+import { BotErr, ErrorKind, ErrorOrigin } from "@/system/handlers/errHandlers";
 //#endregion
 //#region           Types
 export namespace types {
@@ -67,13 +67,13 @@ export class DMDialog {
 
                         dmWarn.delete();
 
-                        throw new Err({
+                        throw new BotErr({
                             message: dmClosedWarn,
                             origin: ErrorOrigin.User,
                             kind: ErrorKind.BlockedAction,
                         });
                     } else {
-                        throw new Err({
+                        throw new BotErr({
                             message:
                                 "Ocorreu um problema ao enviar a mensagem!",
                             origin: ErrorOrigin.Unknown,
@@ -103,7 +103,7 @@ export class DMDialog {
             // Add reaction
             await messageSent.react(this.cancelEmoji);
         } catch (err) {
-            if (err instanceof Err) {
+            if (err instanceof BotErr) {
                 if (err.val.message === dmClosedWarn) return new Ok("dmclosed");
             } else {
                 throw err;
@@ -111,8 +111,9 @@ export class DMDialog {
         }
 
         const cancelOptions: AwaitReactionsOptions = {
-            max: 2,
-            filter: (reaction) => reaction.emoji.name === this.cancelEmoji,
+            max: 1,
+            filter: (reaction, user) =>
+                !user.bot && reaction.emoji.name === this.cancelEmoji,
         };
         const messageOptions: MessageCollectorOptions = {
             filter: (m) => m.author.id === this.user.id,
@@ -127,7 +128,7 @@ export class DMDialog {
             };
 
             // Listen to cancel option
-            messageSent.awaitReactions(cancelOptions).then(async (collection) => {
+            messageSent.awaitReactions(cancelOptions).then(async () => {
                 finish("canceled");
 
                 return void 0;
