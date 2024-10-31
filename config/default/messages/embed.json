@@ -47,6 +47,48 @@
             "iconURL": "${authorURL}"
         }
     },
+    "info": {
+        "punishmentCase": {
+            "title": "Caso ${case} | ${type}",
+            "fields": [
+                {
+                    "name": "Usuário",
+                    "value": "<@${userId}>",
+                    "inline": true
+                },
+                {
+                    "name": "Moderador",
+                    "value": "<@${moderatorId}>",
+                    "inline": true
+                }
+            ],
+            "timestamp": "${createdAt}",
+            "footer": {
+                "text": "ID: ${userId}"
+            }
+        },
+        "punishmentList": {
+            "title": "Lista de Punições de ${username} (Página ${currentPage} de ${totalPages})",
+            "color": "#ff0000",
+            "fields": [],
+            "thumbnail": {
+                "url": "${authorAvatar}"
+            },
+            "timestamp": "${createdAt}",
+            "footer": {
+                "text": "${totalCases} casos • Use \"/punishment list <user> [page]\" para ver outras páginas!"
+            }
+        },
+        "simpleResponse": {
+            "title": "${title}",
+            "color": "#d202f7",
+            "description": "${description}",
+            "timestamp": "${createdAt}",
+            "footer": {
+                "text": "${username}"
+            }
+        }
+    },
     "warn": {
         "missingPermission": {
             "title": "Acesso negado.",

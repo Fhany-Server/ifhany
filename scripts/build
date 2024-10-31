@@ -13,6 +13,8 @@ fi
 # Install Dependencies
 yarn install
 
+npx prisma generate
+
 # Copy Other Data
 npx tsc && npx tsc-alias --resolve-full-paths
 

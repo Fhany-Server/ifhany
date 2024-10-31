@@ -20,9 +20,9 @@ import {
 import { Ok } from "ts-results";
 //#endregion
 //#region           Modules
-import { PresetHandler } from "@/system/handlers/presetHandler";
 import { EmbedMessagesHandler } from "../../external/handlers/embed";
-import { Err, ErrorOrigin, ErrorKind } from "@/system/handlers/errHandlers";
+import { BotErr, ErrorOrigin, ErrorKind } from "@/system/handlers/errHandlers";
+import { prisma } from "//index";
 //#endregion
 //#region           Types
 export namespace types {
@@ -31,9 +31,7 @@ export namespace types {
     };
     export type DataDialogs = {
         PresetName: () => Promise<Ok<string>>;
-        String: (
-            questionEmbed: APIEmbed,
-        ) => Promise<Ok<string>>;
+        String: (questionEmbed: APIEmbed) => Promise<Ok<string>>;
         Options: (
             data: {
                 description: string;
@@ -151,7 +149,7 @@ export class PresetDialogHandler {
         //#endregion
 
         const actionDialog = await this.interaction.editReply({
-            embeds: [embed.val.embedData],
+            embeds: [embed.unwrap().data],
             components: [row],
         });
 
@@ -184,7 +182,7 @@ export class PresetDialogHandler {
         ).Mount({ commandName: this.commandLabel });
 
         await this.interaction.editReply({
-            embeds: [getEmbed.val.embedData],
+            embeds: [getEmbed.unwrap().data],
             components: [],
             content: "",
         });
@@ -195,7 +193,7 @@ export class PresetDialogHandler {
         const factory: FactoryObj<types.DataDialogs> = {
             PresetName: async () => {
                 if (this.interaction.channel === null) {
-                    throw new Err({
+                    throw new BotErr({
                         message: "This interaction doesn't have a channel!",
                         origin: ErrorOrigin.User,
                         kind: ErrorKind.TypeError,
@@ -205,15 +203,25 @@ export class PresetDialogHandler {
                 const verifyPresetExistence = async (
                     presetName: string
                 ): Promise<Ok<boolean>> => {
-                    const presetHandler = new PresetHandler(this.commandName);
-
                     try {
-                        await presetHandler.Get(presetName);
+                        const getPreset =
+                            prisma.autoReportPresetInfo.findUnique({
+                                where: {
+                                    name: presetName,
+                                },
+                            });
+
+                        if (getPreset === null)
+                            throw new BotErr({
+                                message: "Preset not found!",
+                                origin: ErrorOrigin.User,
+                                kind: ErrorKind.NotFound,
+                            });
 
                         return Ok(true);
                     } catch (err) {
                         if (
-                            err instanceof Err &&
+                            err instanceof BotErr &&
                             err.val.kind === ErrorKind.NotFound
                         )
                             return Ok(false);
@@ -226,7 +234,7 @@ export class PresetDialogHandler {
                     await new EmbedMessagesHandler(
                         "presetDialog.presetNameDialog"
                     ).Mount({ commandLabel: this.commandLabel })
-                ).val.embedData;
+                ).unwrap().data;
 
                 this.interaction.editReply({
                     embeds: [embed],
@@ -242,7 +250,7 @@ export class PresetDialogHandler {
                 ).first();
 
                 if (awaitResponse === undefined) {
-                    throw new Err({
+                    throw new BotErr({
                         message: "Tempo esgotado!",
                         origin: ErrorOrigin.User,
                         kind: ErrorKind.TimeOut,
@@ -257,7 +265,7 @@ export class PresetDialogHandler {
                         await new EmbedMessagesHandler(
                             "presetDialog.err.presetAlreadyExists"
                         ).Mount({ presetName })
-                    ).val.embedData;
+                    ).unwrap().data;
 
                     await this.interaction.editReply({
                         embeds: [embed],
@@ -274,7 +282,7 @@ export class PresetDialogHandler {
                     ).first();
 
                     if (awaitResponse === undefined) {
-                        throw new Err({
+                        throw new BotErr({
                             message: "Tempo esgotado!",
                             origin: ErrorOrigin.User,
                             kind: ErrorKind.TimeOut,
@@ -298,7 +306,7 @@ export class PresetDialogHandler {
                     interaction: ChatInputCommandInteraction
                 ): Promise<Ok<string>> => {
                     if (interaction.channel === null) {
-                        throw new Err({
+                        throw new BotErr({
                             message: "This interaction doesn't have a channel!",
                             origin: ErrorOrigin.User,
                             kind: ErrorKind.TypeError,
@@ -315,7 +323,7 @@ export class PresetDialogHandler {
                     ).first();
 
                     if (awaitResponse === undefined) {
-                        throw new Err({
+                        throw new BotErr({
                             message: "Tempo esgotado!",
                             origin: ErrorOrigin.User,
                             kind: ErrorKind.TimeOut,
@@ -326,7 +334,8 @@ export class PresetDialogHandler {
                     return Ok(awaitResponse.content);
                 };
 
-                const receivedString = (await getResponse(this.interaction)).val;
+                const receivedString = (await getResponse(this.interaction))
+                    .val;
 
                 return Ok(receivedString);
             },
@@ -370,7 +379,7 @@ export class PresetDialogHandler {
                 );
 
                 const dialog = await this.interaction.editReply({
-                    embeds: [embed.val.embedData],
+                    embeds: [embed.unwrap().data],
                     components: [row],
                 });
 
@@ -429,7 +438,7 @@ export class PresetDialogHandler {
                 );
 
                 const dialog = await this.interaction.editReply({
-                    embeds: [embed.val.embedData],
+                    embeds: [embed.unwrap().data],
                     components: [menuRow],
                 });
 

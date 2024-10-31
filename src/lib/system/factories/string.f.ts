@@ -4,7 +4,7 @@ import path from "path";
 import { Ok } from "ts-results";
 //#region           Modules
 import interpreter from "@/system/factories/interpreter.f";
-import { Err, ErrorOrigin, ErrorKind } from "@/system/handlers/errHandlers";
+import { BotErr, ErrorOrigin, ErrorKind } from "@/system/handlers/errHandlers";
 //#endregion
 //#endregion
 //#region           Typing
@@ -60,7 +60,7 @@ const Default: Factory<types.Functions> = () => {
                 var parts: string[] = variable.split(".");
 
                 if (parts.length === 0) {
-                    throw new Err({
+                    throw new BotErr({
                         message: "Uh... You need to specify a variable...",
                         origin: ErrorOrigin.Internal,
                         kind: ErrorKind.EmptyValue,
@@ -91,7 +91,7 @@ const Default: Factory<types.Functions> = () => {
                                 if (Array.isArray(result)) {
                                     finalValue = result.join(", ");
                                 } else {
-                                    throw new Err({
+                                    throw new BotErr({
                                         message:
                                             "The final value is an object!",
                                         origin: ErrorOrigin.Internal,
@@ -102,7 +102,7 @@ const Default: Factory<types.Functions> = () => {
                                 if (result !== undefined)
                                     finalValue = result.toString();
                                 else
-                                    throw new Err({
+                                    throw new BotErr({
                                         message:
                                             "The final value is undefined!",
                                         origin: ErrorOrigin.Internal,
@@ -123,7 +123,7 @@ const Default: Factory<types.Functions> = () => {
                 }
 
                 if (finalValue === "")
-                    throw new Err({
+                    throw new BotErr({
                         message:
                             "Something is wrong! The final value is empty!",
                         origin: ErrorOrigin.Internal,

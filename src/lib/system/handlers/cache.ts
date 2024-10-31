@@ -6,7 +6,7 @@ import { Ok } from "ts-results";
 import { EventEmitter } from "events";
 //#endregion
 //#region           Modules
-import { Err, ErrorOrigin, ErrorKind } from "@/system/handlers/errHandlers";
+import { BotErr, ErrorOrigin, ErrorKind } from "@/system/handlers/errHandlers";
 //#endregion
 //#region           Implementation
 export class CacheHandler extends NodeCache {
@@ -29,7 +29,7 @@ export class CacheHandler extends NodeCache {
 
         // Verify Errors
         if (!result)
-            throw new Err({
+            throw new BotErr({
                 message: "Unable to create cache entry!",
                 origin: ErrorOrigin.Internal,
                 kind: ErrorKind.Other,

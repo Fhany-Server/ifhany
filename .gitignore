@@ -117,8 +117,7 @@ t
 .deploy/
 backup/
 
-data/*
-!data/default/
+dist/*
 
 docs/
 

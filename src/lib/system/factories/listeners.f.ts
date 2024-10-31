@@ -5,7 +5,7 @@ import { Ok } from "ts-results";
 //#endregion
 //#region           Modules
 import { Log } from "@/system/handlers/log";
-import { Err, ErrorKind, ErrorOrigin } from "@/system/handlers/errHandlers";
+import { BotErr, ErrorKind, ErrorOrigin } from "@/system/handlers/errHandlers";
 //#endregion
 //#region           Typing
 export namespace types {
@@ -18,7 +18,7 @@ export namespace types {
 }
 //#endregion
 //#region           Variables
-const nonInitializedErr = new Err({
+const nonInitializedErr = new BotErr({
     message: "Listener are not initialized!",
     origin: ErrorOrigin.Unknown,
     kind: ErrorKind.Other,

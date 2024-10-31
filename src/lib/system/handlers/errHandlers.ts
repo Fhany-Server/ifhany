@@ -5,7 +5,7 @@ import { ErrImpl, Ok } from "ts-results";
 //#endregion
 //#region           Modules
 import { Log } from "@/system/handlers/log";
-import { client } from "//index";
+import { client, DEVELOPER_ID } from "//index";
 import { Interaction } from "discord.js";
 //#endregion
 //#region           Typing
@@ -22,9 +22,9 @@ export namespace types {
     }
 
     /**
-     * A standarnized ts-results Err object.
+     * A standarnized ts-results BotErr object.
      * @example
-     * new Err({
+     * new BotErr({
      *      message: "Oh no! That's an error",
      *      type: ErrorKind
      * })
@@ -62,17 +62,24 @@ export enum ErrorOrigin {
     Unknown = "Unknown",
     User = "User",
 }
-/**
- * A standarnized ts-results Err class.
- */
-export class Err extends ErrImpl<DefaultErr> {
-    constructor(err: DefaultErr) {
-        super(err);
-    }
-}
+
+export type Result<O, E = DefaultErr> = Ok<O> | ErrImpl<E>;
 
 //#region           Variables
 const defaultErrMessage = "An error occurred during the interaction!";
+
+export const errors: Record<string, DefaultErr> = {
+    presetNotFound: {
+        message: "Preset não encontrado!",
+        origin: ErrorOrigin.User,
+        kind: ErrorKind.NotFound,
+    },
+    typeErr: {
+        message: "O valor recebido não é do tipo requerido!",
+        origin: ErrorOrigin.Internal,
+        kind: ErrorKind.TypeError,
+    },
+};
 //#endregion
 //#region           Implementation
 export class ErrorHandler {
@@ -107,7 +114,8 @@ export class ErrorHandler {
             warnDeveloper: async () => {
                 var message: string;
 
-                if (this.error instanceof Err) message = this.error.val.message;
+                if (this.error instanceof BotErr)
+                    message = this.error.val.message;
                 else if (this.error instanceof Error)
                     message = this.error.message;
                 else message = defaultErrMessage;
@@ -125,12 +133,12 @@ export class ErrorHandler {
                 // Warn Developer
                 try {
                     const devUser = await client.users.fetch(
-                        "855638247937409065"
+                        DEVELOPER_ID
                     );
                     await devUser.send(devMessage);
                 } catch (err) {
                     Log.PrintErr(
-                        new Err({
+                        new BotErr({
                             message:
                                 "Erro em cima de erro em! " +
                                 "Não consegui enviar a mensagem para o dev.",
@@ -146,7 +154,29 @@ export class ErrorHandler {
         };
         return factory;
     }
-    public async Healer(): Promise<Ok<void>> {
-        return Ok.EMPTY;
+    public Healer(interaction?: Interaction): void {
+        console.log(this.error);
+
+        this.Utils().warnDeveloper();
+
+        if (interaction !== undefined) {
+            this.Utils().warnUser(interaction);
+        }
+    }
+}
+
+/**
+ * A standarnized ts-results BotErr class.
+ */
+export class BotErr extends ErrImpl<DefaultErr> {
+    constructor(err: DefaultErr) {
+        super(err);
+    }
+
+    /**
+     * Pass the error on, to deal with it on a larger scope.
+     */
+    unwrap(): never {
+        throw this;
     }
 }

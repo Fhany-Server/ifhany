@@ -1,24 +1,27 @@
 {
     "name": "ifhany",
-    "version": "0.3.0",
+    "version": "1.0.0",
     "author": "Dev Myna <var.devmyna@gmail.com> (https://devmyna.xyz)",
     "main": "./dist/src/index.js",
     "dependencies": {
+        "@prisma/client": "5.18.0",
         "anchorme": "^3.0.5",
-        "axios": "^1.4.0",
+        "axios": "^1.7.3",
         "discord.js": "^14.14.1",
+        "dotenv": "^16.4.5",
         "moment": "^2.29.4",
         "node-cache": "^5.1.2",
+        "prisma": "5.18.0",
         "proper-lockfile": "^4.1.2",
         "ts-results": "^3.3.0",
         "typescript": "^5.0.4"
     },
     "scripts": {
         "start": "clear; node .",
-        "dev": "./scripts/build && ./scripts/dev-init",
-        "devenv": "./scripts/build --no-clean && ./scripts/dev-init",
-        "dev-cached": "./scripts/dev-init",
-        "test": "./scripts/test",
+        "dev": "docker rm ifhany_db; docker-compose -f docker-compose.yml -f config/docker-compose_dev.yml up --build --remove-orphans ",
+        "test": "docker-compose run --entrypoint './scripts/on-container_test.bash' app",
+        "devenv": "./scripts/dev-init --no-clean",
+        "dev-cached": "./scripts/dev-init --no-build",
         "watch": "tsc -w",
         "build": "./scripts/build",
         "build-cl": "rm -r ./dist/*",
@@ -55,6 +58,11 @@
         "typedoc": "^0.24.8",
         "typedoc-material-theme": "^1.0.1",
         "typescript-json-schema": "^0.62.0"
+    },
+    "husky": {
+        "hooks": {
+            "commit-msg": "npx commitlint -E HUSKY_GIT_PARAMS"
+        }
     },
     "_moduleAliases": {
         "/": "dist/src",

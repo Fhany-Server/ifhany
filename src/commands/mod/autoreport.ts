@@ -24,22 +24,19 @@ import filter from "@/system/factories/filter.f";
 import string from "@/system/factories/string.f";
 import verify from "@/system/factories/verify.f";
 import messagesLib from "@/external/factories/preseted.f";
-import presetCommandTemplate from "@/system/factories/presetCommandTemplate.f";
 import {
+    errors,
     DefaultErr,
-    Err,
+    BotErr,
     ErrorKind,
     ErrorOrigin,
 } from "@/system/handlers/errHandlers";
 import { Log } from "@/system/handlers/log";
-import { client } from "//index";
-import { PresetHandler } from "@/system/handlers/presetHandler";
+import { client, prisma } from "//index";
 import { ListenerHandler } from "@/system/handlers/listener";
-import { DataBowlHandler } from "@/system/handlers/dataBowl";
 //#endregion
 //#region           Typing
 import { types as reactTypes } from "@/external/factories/react.f";
-import { types as presetTypes } from "@/system/components/preset";
 import { types as commandTypes } from "@/system/handlers/command";
 export namespace types {
     export type PresetParams = {
@@ -91,9 +88,7 @@ export namespace types {
     export type SubCommands = {
         new: (interaction: ChatInputCommandInteraction) => Promise<Ok<string>>;
         edit: (interaction: ChatInputCommandInteraction) => Promise<Ok<string>>;
-        rm: (
-            interaction: ChatInputCommandInteraction
-        ) => Promise<Ok<string>>;
+        rm: (interaction: ChatInputCommandInteraction) => Promise<Ok<string>>;
         list: (
             interaction: ChatInputCommandInteraction
         ) => Promise<Ok<string | APIEmbed>>;
@@ -145,9 +140,9 @@ export const data: types.data = () => {
         remove: {
             subc: "Remove o preset que você criou para eu reagir nos chats!",
             preset: "Qual preset você deseja remover?",
-            removePrevious:
-                "Você deseja que eu faça com que as mensagens já reagidas " +
-                "parem de ser reportadas?",
+            preservePrevious:
+                "Você deseja que eu continue lidando com as mensagens já reagidas? " +
+                "(remoção parcial)",
         },
         list: {
             subc: "Lista todos os presets que você criou para eu reagir nos chats!",
@@ -251,10 +246,10 @@ export const data: types.data = () => {
                             .setAutocomplete(true)
                             .setRequired(true)
                     )
-                    .addBooleanOption((removePrevious) =>
-                        removePrevious
-                            .setName("remove-previous")
-                            .setDescription(description.remove.removePrevious)
+                    .addBooleanOption((preservePrevious) =>
+                        preservePrevious
+                            .setName("preserve-previous")
+                            .setDescription(description.remove.preservePrevious)
                     )
                     .addBooleanOption((ephemeral) =>
                         ephemeral
@@ -267,11 +262,6 @@ export const data: types.data = () => {
                 list
                     .setName("list")
                     .setDescription(description.list.subc)
-                    .addBooleanOption((withOlds) =>
-                        withOlds
-                            .setName("with-olds")
-                            .setDescription(description.list.withOlds)
-                    )
                     .addBooleanOption((ephemeral) =>
                         ephemeral
                             .setName("ephemeral")
@@ -283,12 +273,6 @@ export const data: types.data = () => {
     });
 };
 export const action: types.actionFunction = async (params) => {
-    const typeErr: DefaultErr = {
-        message: "O valor recebido não é do tipo requerido!",
-        origin: ErrorOrigin.Internal,
-        kind: ErrorKind.TypeError,
-    };
-
     // Receive Preset data
     {
         const chatNotFound =
@@ -302,40 +286,44 @@ export const action: types.actionFunction = async (params) => {
         var chat: TextBasedChannel;
 
         const getChat = await client.channels.fetch(params.chatID);
-        if (!getChat) {
-            throw new Err({
-                message: chatNotFound,
-                origin: ErrorOrigin.External,
-                kind: ErrorKind.NotFound,
-            });
-        }
-        if (getChat.isTextBased()) {
-            chat = getChat;
-        } else {
-            throw new Err({
-                message: wrongTypeErr,
-                origin: ErrorOrigin.User,
-                kind: ErrorKind.TypeError,
-            });
+        {
+            if (!getChat) {
+                throw new BotErr({
+                    message: chatNotFound,
+                    origin: ErrorOrigin.External,
+                    kind: ErrorKind.NotFound,
+                });
+            }
+            if (getChat.isTextBased()) {
+                chat = getChat;
+            } else {
+                throw new BotErr({
+                    message: wrongTypeErr,
+                    origin: ErrorOrigin.User,
+                    kind: ErrorKind.TypeError,
+                });
+            }
         }
 
         var logChat: TextBasedChannel;
         const getLogChat = await client.channels.fetch(params.logChatID);
-        if (!getLogChat) {
-            throw new Err({
-                message: chatNotFound,
-                origin: ErrorOrigin.External,
-                kind: ErrorKind.NotFound,
-            });
-        }
-        if (getLogChat.isTextBased()) {
-            logChat = getLogChat;
-        } else {
-            throw new Err({
-                message: wrongTypeErr,
-                origin: ErrorOrigin.User,
-                kind: ErrorKind.TypeError,
-            });
+        {
+            if (!getLogChat) {
+                throw new BotErr({
+                    message: chatNotFound,
+                    origin: ErrorOrigin.External,
+                    kind: ErrorKind.NotFound,
+                });
+            }
+            if (getLogChat.isTextBased()) {
+                logChat = getLogChat;
+            } else {
+                throw new BotErr({
+                    message: wrongTypeErr,
+                    origin: ErrorOrigin.User,
+                    kind: ErrorKind.TypeError,
+                });
+            }
         }
 
         var emoji: string | GuildEmoji;
@@ -343,7 +331,7 @@ export const action: types.actionFunction = async (params) => {
             const getEmoji = client.emojis.resolve(params.emojiID);
 
             if (!getEmoji)
-                throw new Err({
+                throw new BotErr({
                     message: emojiNotFound,
                     origin: ErrorOrigin.External,
                     kind: ErrorKind.NotFound,
@@ -363,63 +351,20 @@ export const action: types.actionFunction = async (params) => {
         };
     }
 
-    const middleActionOnFirstReaction: reactTypes.MiddleAction = async (
-        message
-    ) => {
-        const DataHandler = new DataBowlHandler(commandName);
+    const actionBeforeReact: reactTypes.ActionBeforeReact = async (message) => {
+        const dataTable = await prisma.autoReportPresetData.findUnique({
+            where: { name: params.name },
+        });
+        if (!dataTable) throw new BotErr(errors.presetNotFound);
 
-        const oldMessages = (await DataHandler.Get(params.name)).val.object
-            .data.messages;
+        if (!Array.isArray(dataTable.noReported))
+            throw new BotErr(errors.typeErr);
 
-        if (!Array.isArray(oldMessages))
-            throw new Err({
-                message: "The old messages array... Is not an array.",
-                origin: ErrorOrigin.Internal,
-                kind: ErrorKind.TypeError,
-            });
+        dataTable.noReported.push(message.id);
 
-        await DataHandler.Set(
-            params.name,
-            [...oldMessages, message.id],
-            "messages"
-        );
-        const dataHandler = new DataBowlHandler(commandName);
-
-        // Escrita no arquivo de dados
-        {
-            // Adicionar no alreadyReported
-            const alreadyReported = (await dataHandler.Get(params.name)).val
-                .object.data.alreadyReported;
-
-            if (!Array.isArray(alreadyReported)) throw new Err(typeErr);
-
-            alreadyReported.push(reaction.message.id);
-
-            await dataHandler.Set(
-                params.name,
-                alreadyReported,
-                "alreadyReported"
-            );
-
-            // Remover do messages
-            const messages = (await dataHandler.Get(params.name)).val.object
-                .data.messages;
-
-            if (!Array.isArray(messages)) throw new Err(typeErr);
-
-            messages.splice(messages.indexOf(reaction.message.id), 1);
-
-            await dataHandler.Set(params.name, messages, "messages");
-        }
-
-        // Cancel the report if the user requested
-        if (!reason.val) return Ok.EMPTY;
-
-        messagesLib.embed.sendReportMessage({
-            interaction: reaction,
-            user,
-            logChat,
-            reason: reason.val,
+        await prisma.autoReportPresetData.update({
+            where: { name: params.name },
+            data: { noReported: dataTable.noReported },
         });
 
         return Ok.EMPTY;
@@ -448,36 +393,41 @@ export const action: types.actionFunction = async (params) => {
             {
                 action: actionOnUserReaction,
                 actionParams: executionParams,
-                middleAction: middleActionOnFirstReaction
+                middleAction: actionBeforeReact,
             }
         );
-        const dataHandler = new DataBowlHandler(commandName);
 
-        // Escrita no arquivo de dados
+        // Writing to the database
         {
-            // Adicionar no alreadyReported
-            const alreadyReported = (await dataHandler.Get(params.name)).val
-                .object.data.alreadyReported;
+            // Get data
+            const dataTable = await prisma.autoReportPresetData.findUnique({
+                where: { name: params.name },
+            });
+            if (!dataTable) throw new BotErr(errors.presetNotFound);
 
-            if (!Array.isArray(alreadyReported)) throw new Err(typeErr);
+            // Put on 'alreadyReported'
+            if (!Array.isArray(dataTable.alreadyReported))
+                throw new BotErr(errors.typeErr);
 
-            alreadyReported.push(reaction.message.id);
+            dataTable.alreadyReported.push(reaction.message.id);
 
-            await dataHandler.Set(
-                params.name,
-                alreadyReported,
-                "alreadyReported"
+            // Remove from 'messages'
+            if (!Array.isArray(dataTable.noReported))
+                throw new BotErr(errors.typeErr);
+
+            dataTable.noReported.splice(
+                dataTable.noReported.indexOf(reaction.message.id),
+                1
             );
 
-            // Remover do messages
-            const messages = (await dataHandler.Get(params.name)).val.object
-                .data.messages;
-
-            if (!Array.isArray(messages)) throw new Err(typeErr);
-
-            messages.splice(messages.indexOf(reaction.message.id), 1);
-
-            await dataHandler.Set(params.name, messages, "messages");
+            // Update database
+            await prisma.autoReportPresetData.update({
+                where: { name: params.name },
+                data: {
+                    alreadyReported: dataTable.alreadyReported,
+                    noReported: dataTable.noReported,
+                },
+            });
         }
 
         // Cancel the report if the user requested
@@ -497,7 +447,7 @@ export const action: types.actionFunction = async (params) => {
     {
         const actionOnFirstReaction = await react.reactOnNewMessage(
             executionParams,
-            middleActionOnFirstReaction
+            actionBeforeReact
         );
 
         // React to new messages
@@ -538,9 +488,10 @@ export const utils: types.Utils = {
             isRequired[3]
         );
 
-        if (chat && !(chat instanceof TextChannel)) throw new Err(textBasedErr);
+        if (chat && !(chat instanceof TextChannel))
+            throw new BotErr(textBasedErr);
         if (logChat && !(logChat instanceof TextChannel))
-            throw new Err(textBasedErr);
+            throw new BotErr(textBasedErr);
 
         const data: Record<string, string | TextChannel | null> = {
             presetName,
@@ -566,7 +517,6 @@ export const utils: types.Utils = {
     },
 };
 const subCommands: Factory<types.SubCommands> = () => {
-    const presetTemplate = presetCommandTemplate(commandName);
     const noReceivedRequiredParams: DefaultErr = {
         message:
             "Por algum motivo os parâmetros obrigatórios não foram recebidos.",
@@ -580,7 +530,7 @@ const subCommands: Factory<types.SubCommands> = () => {
                 utils.receiveData(interaction, [true, true, true]).val;
 
             if (!chat || !logChat || !receivedEmoji)
-                throw new Err(noReceivedRequiredParams);
+                throw new BotErr(noReceivedRequiredParams);
 
             const sanitizedEmoji = filter.sanitizeEmoji(receivedEmoji).val;
             const emojiId = sanitizedEmoji.filteredEmoji.id;
@@ -597,23 +547,34 @@ const subCommands: Factory<types.SubCommands> = () => {
                 customEmoji,
             };
 
-            const initialDataBowl = {
-                alreadyReported: [],
-                messages: [],
-            };
+            const presetInfo = await prisma.autoReportPresetInfo.create({
+                data: {
+                    name: presetName,
+                    reactNewMessages: true,
+                    ...presetParams,
+                },
+            });
 
-            const response = await presetTemplate.new(
-                presetName,
-                presetParams,
-                initialDataBowl
-            );
+            await prisma.autoReportPresetData.create({
+                data: {
+                    name: presetName,
+                    alreadyReported: [],
+                    noReported: [],
+                    infoUUID: presetInfo.uuid,
+                },
+            });
 
             await action({
                 name: presetName,
                 ...presetParams,
             });
 
-            return Ok(response.val);
+            return Ok(
+                string.varInterpreter(
+                    messages.commands.mod.autoreport.utils.success.createPreset,
+                    { presetName: presetName }
+                ).val
+            );
         },
         edit: async (interaction) => {
             // Receber Dados
@@ -632,7 +593,7 @@ const subCommands: Factory<types.SubCommands> = () => {
                         { presetName: receivedData.presetName }
                     );
 
-                    throw new Err({
+                    throw new BotErr({
                         message: getMessage.val,
                         origin: ErrorOrigin.User,
                         kind: ErrorKind.GhostEditing,
@@ -648,7 +609,7 @@ const subCommands: Factory<types.SubCommands> = () => {
                         receivedData.receivedEmoji
                     )
                 ) {
-                    throw new Err({
+                    throw new BotErr({
                         message:
                             messages.commands.mod.autoreport.warns
                                 .minimalOptionalParam,
@@ -669,17 +630,19 @@ const subCommands: Factory<types.SubCommands> = () => {
                   ).val
                 : null;
 
-            const editedPreset = await presetTemplate.edit(
-                receivedData.presetName,
-                {
-                    chatID: receivedData.chat ? receivedData.chat.id : null,
+            const editedPreset = await prisma.autoReportPresetInfo.update({
+                where: { name: receivedData.presetName },
+                data: {
+                    chatID: receivedData.chat
+                        ? receivedData.chat.id
+                        : undefined,
                     logChatID: receivedData.logChat
                         ? receivedData.logChat.id
-                        : null,
-                    presetNewName: receivedData.presetNewName,
+                        : undefined,
+                    name: receivedData.presetNewName,
                     emoji: sanitizeReceivedEmoji
                         ? sanitizeReceivedEmoji.filteredEmoji.name
-                        : null,
+                        : undefined,
                     emojiID: sanitizeReceivedEmoji
                         ? sanitizeReceivedEmoji.filteredEmoji.id
                         : undefined,
@@ -687,13 +650,13 @@ const subCommands: Factory<types.SubCommands> = () => {
                         sanitizeReceivedEmoji &&
                         typeof receivedCustomEmoji === "boolean"
                             ? receivedCustomEmoji
-                            : null,
-                }
-            );
+                            : undefined,
+                },
+            });
 
-            const newObj = editedPreset.val.obj;
+            const newObj = editedPreset;
             if (!newObj)
-                throw new Err({
+                throw new BotErr({
                     message:
                         "Algo de errado aconteceu! O editPreset não retornou o objeto.",
                     origin: ErrorOrigin.Internal,
@@ -703,7 +666,7 @@ const subCommands: Factory<types.SubCommands> = () => {
             if (typeof newObj.emoji === "string") {
                 var sanitizedEmoji = filter.sanitizeEmoji(newObj.emoji).val;
             } else {
-                throw new Err({
+                throw new BotErr({
                     message:
                         "Something is wrong! The emoji cannot be sanitized.",
                     origin: ErrorOrigin.Internal,
@@ -723,7 +686,7 @@ const subCommands: Factory<types.SubCommands> = () => {
                     newObj.emojiID !== undefined &&
                     typeof newObj.emojiID !== "string")
             )
-                throw new Err({
+                throw new BotErr({
                     message:
                         "Something is wrong! One of the IDs is not a Snowflake.",
                     origin: ErrorOrigin.Internal,
@@ -731,7 +694,7 @@ const subCommands: Factory<types.SubCommands> = () => {
                 });
 
             const executionParams = {
-                name: newObj.presetName,
+                name: newObj.name,
                 chatID: newObj.chatID,
                 logChatID: newObj.logChatID,
                 emoji: "",
@@ -748,7 +711,7 @@ const subCommands: Factory<types.SubCommands> = () => {
                     { receivedEmoji: receivedData.receivedEmoji }
                 );
 
-                throw new Err({
+                throw new BotErr({
                     message: getMessage.val,
                     origin: ErrorOrigin.User,
                     kind: ErrorKind.NotFound,
@@ -778,44 +741,46 @@ const subCommands: Factory<types.SubCommands> = () => {
                 "preset-name",
                 true
             );
-            const removePrevious =
-                interaction.options.getBoolean("remove-previous");
+            const preservePrevious =
+                interaction.options.getBoolean("preserve-previous");
 
-            const removePreset = await presetTemplate.remove(
-                presetName,
-                removePrevious
-            );
+            if (preservePrevious) {
+                await prisma.autoReportPresetInfo.update({
+                    where: { name: presetName },
+                    data: { reactNewMessages: false },
+                });
+            } else {
+                await prisma.autoReportPresetData.delete({
+                    where: { name: presetName },
+                });
+
+                await prisma.autoReportPresetInfo.delete({
+                    where: { name: presetName },
+                });
+
+                new ListenerHandler(
+                    Events.MessageReactionAdd,
+                    `${Events.MessageReactionAdd}-${presetName}`
+                ).Remove();
+            }
 
             new ListenerHandler(
                 Events.MessageCreate,
                 `${Events.MessageCreate}-${presetName}`
             ).Remove();
-            new ListenerHandler(
-                Events.MessageReactionAdd,
-                `${Events.MessageReactionAdd}-${presetName}`
-            ).Remove();
 
-            if (removePreset.ok) {
-                return Ok(removePreset.val);
-            } else {
-                return removePreset;
-            }
+            return Ok(`O preset **${presetName}** foi removido`);
         },
         list: async (interaction) => {
-            const withOlds = interaction.options.getBoolean("with-olds");
-
-            const presetList = await presetTemplate.list(withOlds);
-
             const messageEmbed = await messagesLib.embed.sendListMessage(
                 {
                     commandName,
-                    presetList: presetList.val,
                 },
                 interaction,
                 true
             );
 
-            return Ok(messageEmbed.val.embedData);
+            return Ok(messageEmbed.val.data);
         },
     };
     return factory;
@@ -826,9 +791,11 @@ export const execute: types.execute = async (interaction) => {
 
     var response: Ok<string | APIEmbed>;
     const getEphemeral = interaction.options.getBoolean("ephemeral");
+
     await interaction.deferReply({
         ephemeral: getEphemeral !== null ? getEphemeral : true,
     });
+
     switch (subcommand) {
         case "new":
             response = await scomms.new(interaction);
@@ -843,7 +810,7 @@ export const execute: types.execute = async (interaction) => {
             response = await scomms.list(interaction);
             break;
         default:
-            throw new Err({
+            throw new BotErr({
                 message: "Nenhum subcomando foi atingido!",
                 origin: ErrorOrigin.Internal,
                 kind: ErrorKind.LogicError,
@@ -863,9 +830,11 @@ export const execute: types.execute = async (interaction) => {
 };
 export const autocomplete: types.autocomplete = async (interaction) => {
     const focused = interaction.options.getFocused(true);
-    const list: presetTypes.PresetInfo[] = (
-        await new PresetHandler(commandName).List()
-    ).val;
+    const list = await prisma.autoReportPresetInfo.findMany({
+        select: {
+            name: true,
+        },
+    });
 
     const subComm = interaction.options.getSubcommand();
 
