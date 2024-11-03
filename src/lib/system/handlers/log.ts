@@ -22,7 +22,7 @@ export namespace types {
 }
 //#endregion
 //#region           Variables
-import logs from "D/logs.json";
+import logs from "$/logs.json";
 
 const defaultEmergencyMessages = {
     valueError:

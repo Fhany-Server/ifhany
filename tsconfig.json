@@ -27,10 +27,7 @@
             ">/*": [
                 "src/commands/*"
             ],
-            "$/": [
-                "config/*"
-            ],
-            "D/*": [
+            "$/*": [
                 "config/default/*"
             ],
             "T/*": [
