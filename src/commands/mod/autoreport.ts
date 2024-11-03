@@ -10,6 +10,7 @@ import {
     Message,
     MessageReaction,
     SlashCommandBuilder,
+    SlashCommandSubcommandsOnlyBuilder,
     Snowflake,
     TextBasedChannel,
     TextChannel,
@@ -36,7 +37,6 @@ import { client, prisma } from "//index";
 import { ListenerHandler } from "@/system/handlers/listener";
 //#endregion
 //#region           Typing
-import { types as reactTypes } from "@/external/factories/react.f";
 import { types as commandTypes } from "@/system/handlers/command";
 export namespace types {
     export type PresetParams = {
@@ -98,7 +98,9 @@ export namespace types {
         message: Message,
         emoji: GuildEmoji | string
     ) => Ok<void>;
-    export type data = () => Ok<commandTypes.CommandData<SlashCommandBuilder>>;
+    export type data = () => Ok<
+        commandTypes.CommandData<SlashCommandSubcommandsOnlyBuilder>
+    >;
     export type actionFunction = (
         params: types.ReceivedStoredParams
     ) => Promise<Ok<AnyFunction>>;
@@ -283,7 +285,7 @@ export const action: types.actionFunction = async (params) => {
             "Na requisição de verificação, o emoji existia, porém não mais!";
         const wrongTypeErr = "Você precisa entregar um canal de texto!";
 
-        var chat: TextBasedChannel;
+        var chat: TextChannel;
 
         const getChat = await client.channels.fetch(params.chatID);
         {
@@ -293,8 +295,7 @@ export const action: types.actionFunction = async (params) => {
                     origin: ErrorOrigin.External,
                     kind: ErrorKind.NotFound,
                 });
-            }
-            if (getChat.isTextBased()) {
+            } else if (getChat instanceof TextChannel) {
                 chat = getChat;
             } else {
                 throw new BotErr({
@@ -305,7 +306,7 @@ export const action: types.actionFunction = async (params) => {
             }
         }
 
-        var logChat: TextBasedChannel;
+        var logChat: TextChannel;
         const getLogChat = await client.channels.fetch(params.logChatID);
         {
             if (!getLogChat) {
@@ -314,8 +315,7 @@ export const action: types.actionFunction = async (params) => {
                     origin: ErrorOrigin.External,
                     kind: ErrorKind.NotFound,
                 });
-            }
-            if (getLogChat.isTextBased()) {
+            } else if (getLogChat instanceof TextChannel) {
                 logChat = getLogChat;
             } else {
                 throw new BotErr({
@@ -396,7 +396,7 @@ export const action: types.actionFunction = async (params) => {
             await prisma.autoReportPresetData.update({
                 where: { name: params.name },
                 data: {
-                    alreadyReported: dataTable.alreadyReported
+                    alreadyReported: dataTable.alreadyReported,
                 },
             });
         }
