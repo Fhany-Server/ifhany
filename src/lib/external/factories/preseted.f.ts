@@ -51,7 +51,6 @@ export namespace types {
                 params: {
                     action: AnyFunction;
                     actionParams: autoReportTypes.PresetParams;
-                    middleAction: reactTypes.ActionBeforeReact;
                 }
             ) => Promise<Ok<embedTypes.ReportReason | false>>;
         };
@@ -304,7 +303,6 @@ const Default: Factory<types.PresetedFuns> = () => {
 
                         const returnReaction = await react.reactOnNewMessage(
                             params.actionParams,
-                            params.middleAction
                         );
 
                         returnReaction.val(messageReaction.message);

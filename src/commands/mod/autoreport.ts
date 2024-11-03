@@ -351,24 +351,6 @@ export const action: types.actionFunction = async (params) => {
         };
     }
 
-    const actionBeforeReact: reactTypes.ActionBeforeReact = async (message) => {
-        const dataTable = await prisma.autoReportPresetData.findUnique({
-            where: { name: params.name },
-        });
-        if (!dataTable) throw new BotErr(errors.presetNotFound);
-
-        if (!Array.isArray(dataTable.noReported))
-            throw new BotErr(errors.typeErr);
-
-        dataTable.noReported.push(message.id);
-
-        await prisma.autoReportPresetData.update({
-            where: { name: params.name },
-            data: { noReported: dataTable.noReported },
-        });
-
-        return Ok.EMPTY;
-    };
     const actionOnUserReaction = async (
         reaction: MessageReaction,
         user: User
@@ -393,7 +375,6 @@ export const action: types.actionFunction = async (params) => {
             {
                 action: actionOnUserReaction,
                 actionParams: executionParams,
-                middleAction: actionBeforeReact,
             }
         );
 
@@ -411,21 +392,11 @@ export const action: types.actionFunction = async (params) => {
 
             dataTable.alreadyReported.push(reaction.message.id);
 
-            // Remove from 'messages'
-            if (!Array.isArray(dataTable.noReported))
-                throw new BotErr(errors.typeErr);
-
-            dataTable.noReported.splice(
-                dataTable.noReported.indexOf(reaction.message.id),
-                1
-            );
-
             // Update database
             await prisma.autoReportPresetData.update({
                 where: { name: params.name },
                 data: {
-                    alreadyReported: dataTable.alreadyReported,
-                    noReported: dataTable.noReported,
+                    alreadyReported: dataTable.alreadyReported
                 },
             });
         }
@@ -446,8 +417,7 @@ export const action: types.actionFunction = async (params) => {
     // Create Listeners
     {
         const actionOnFirstReaction = await react.reactOnNewMessage(
-            executionParams,
-            actionBeforeReact
+            executionParams
         );
 
         // React to new messages
@@ -559,7 +529,6 @@ const subCommands: Factory<types.SubCommands> = () => {
                 data: {
                     name: presetName,
                     alreadyReported: [],
-                    noReported: [],
                     infoUUID: presetInfo.uuid,
                 },
             });
