@@ -25,7 +25,8 @@
         "watch": "tsc -w",
         "build": "./scripts/build",
         "build-cl": "rm -r ./dist/*",
-        "build-doc": "npx typedoc --plugin @mxssfd/typedoc-theme --theme my-theme ./src/**/*.ts"
+        "build-doc": "npx typedoc --plugin @mxssfd/typedoc-theme --theme my-theme ./src/**/*.ts",
+        "postinstall": "npx prisma generate"
     },
     "devDependencies": {
         "@babel/core": "^7.22.9",
