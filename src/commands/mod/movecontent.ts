@@ -115,7 +115,7 @@ export namespace types {
 }
 //#endregion
 //#region           Variables
-import messages from "D/messages/normal.json";
+import messages from "$/messages/normal.json";
 const commandName = "movecontent";
 //#endregion
 //#region           Implementation

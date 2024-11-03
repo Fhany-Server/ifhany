@@ -7,7 +7,7 @@ const config: Config.InitialOptions = {
         "^//(.*)$": "<rootDir>/src/$1",
         "^@/(.*)$": "<rootDir>/src/lib/$1",
         "^>/(.*)$": "<rootDir>/src/commands/$1",
-        "^D/(.*)$": "<rootDir>/config/default/$1",
+        "^$/(.*)$": "<rootDir>/config/default/$1",
         "^T/(.*)$": "<rootDir>/__tests__/$1",
         "^L/(.*)$": "<rootDir>/logs/$1",
     },
