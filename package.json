@@ -55,7 +55,7 @@
         "ts-node": "^10.9.1",
         "tsc-alias": "^1.8.7",
         "tsconfig-paths": "^4.2.0",
-        "typedoc": "^0.24.8",
+        "typedoc": "^0.26.7",
         "typedoc-material-theme": "^1.0.1",
         "typescript-json-schema": "^0.62.0"
     },
