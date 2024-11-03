@@ -179,20 +179,11 @@ export const action: types.actionFunction = async (params) => {
 
             dataTable.alreadyReported.push(reaction.message.id);
 
-            // Update noReported messages
-            if (!Array.isArray(dataTable.noReported)) throw new BotErr(typeErr);
-
-            dataTable.noReported.splice(
-                dataTable.noReported.indexOf(reaction.message.id),
-                1
-            );
-
             // Apply
             await prisma.autoReportPresetData.update({
                 where: { name: params.name },
                 data: {
                     alreadyReported: dataTable.alreadyReported,
-                    noReported: dataTable.noReported,
                 },
             });
         }
@@ -202,35 +193,8 @@ export const action: types.actionFunction = async (params) => {
 
     // Create Listeners
     {
-        const middleActionOnFirstReaction: reactTypes.ActionBeforeReact =
-            async (message) => {
-                // const DataHandler = new DataBowlHandler(commandName);
-
-                // const oldMessages = (await DataHandler.Get(params.name)).val
-                //     .object.data.messages;
-
-                // if (!Array.isArray(oldMessages))
-                //     throw new BotErr({
-                //         message:
-                //             "The old messages array... Is not an array.",
-                //         origin: ErrorOrigin.Internal,
-                //         kind: ErrorKind.TypeError,
-                //     });
-
-                // await DataHandler.Set(
-                //     params.name,
-                //     [...oldMessages, message.id],
-                //     "messages"
-                // );
-
-                // Do nothing yet
-
-                return Ok.EMPTY;
-            };
-
         const actionOnFirstReaction = await react.reactOnNewMessage(
-            executionParams,
-            middleActionOnFirstReaction
+            executionParams
         );
 
         // React to new messages

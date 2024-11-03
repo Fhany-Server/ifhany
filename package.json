@@ -66,9 +66,8 @@
     },
     "_moduleAliases": {
         "/": "dist/src",
-        "$": "dist/data",
+        "$": "dist/config/default",
         "@": "dist/src/lib",
-        ">": "dist/src/commands",
-        "D": "dist/data/default"
+        ">": "dist/src/commands"
     }
 }

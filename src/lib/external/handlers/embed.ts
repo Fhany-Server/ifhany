@@ -121,7 +121,7 @@ export namespace types {
 }
 //#endregion
 //#region           Variables
-import defaultEmbeds from "D/messages/embed.json";
+import defaultEmbeds from "$/messages/embed.json";
 const unmountedEmbedErr: DefaultErr = {
     message:
         "Você não montou o embed antes! " +
