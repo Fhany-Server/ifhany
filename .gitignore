@@ -125,3 +125,4 @@ discloud.config
 configs.json
 
 scripts/personal
+config/default/permissions.json
