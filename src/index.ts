@@ -19,6 +19,7 @@ import { ListenerHandler } from "@/system/handlers/listener";
 dotenv.config();
 
 import pkg from "../package.json";
+import { PresetHandler } from "./lib/system/handlers/presetHandler";
 
 const token = process.env.TOKEN || process.exit(1);
 const clientId = process.env.CLIENT_ID || process.exit(1);
@@ -56,7 +57,7 @@ const main = async (): Promise<Ok<void>> => {
     {
         InteractionHandler.LaunchListener();
         ListenerHandler.PredefinedListeners();
-        //await PresetHandler.InitializateAll();
+        await PresetHandler.InitializateAll();
     }
 
     new Log("success.endOfMain").Print();
