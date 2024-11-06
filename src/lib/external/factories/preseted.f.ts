@@ -98,8 +98,6 @@ const Default: Factory<types.PresetedFuns> = () => {
                 const getEmbed = await EmbedHandler.Mount(embedParams);
                 const embed = getEmbed.unwrap().data;
 
-                console.log(embed);
-
                 if (description === reportedMessage.content) {
                     delete embed.title;
                 }
