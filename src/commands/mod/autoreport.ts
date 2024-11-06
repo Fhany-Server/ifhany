@@ -355,10 +355,12 @@ export const action: types.actionFunction = async (params) => {
         reaction: MessageReaction,
         user: User
     ): Promise<Ok<void>> => {
-        if (reaction.message.channel.id !== params.chatID) {
-            return Ok.EMPTY;
-        }
-        if (user.bot) {
+        if (
+            reaction.message.channel.id !== params.chatID ||
+            user.bot ||
+            (reaction.emoji.id !== params.emojiID &&
+                reaction.emoji.name !== params.emoji)
+            ) {
             return Ok.EMPTY;
         }
 
