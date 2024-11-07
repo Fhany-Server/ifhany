@@ -31,6 +31,7 @@ import {
     BotErr,
     ErrorKind,
     ErrorOrigin,
+    Result,
 } from "@/system/handlers/errHandlers";
 import { Log } from "@/system/handlers/log";
 import { client, prisma } from "//index";
@@ -109,7 +110,7 @@ export namespace types {
     ) => Promise<Ok<void>>;
     export type autocomplete = (
         interaction: AutocompleteInteraction
-    ) => Promise<Ok<void>>;
+    ) => Promise<Result<void>>;
 }
 //#endregion
 //#region           Variables
@@ -826,6 +827,14 @@ export const autocomplete: types.autocomplete = async (interaction) => {
                     .map((value) => ({ value: value.name, name: value.name }))
             );
         }
+    } else {
+        return new BotErr({
+            message:
+                "You're enabling autocomplete for a subcommand " +
+                "that doesn't implement it!",
+            origin: ErrorOrigin.Internal,
+            kind: ErrorKind.Other,
+        });
     }
 
     return Ok.EMPTY;
