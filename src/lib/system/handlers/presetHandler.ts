@@ -3,14 +3,10 @@
  */
 
 //#region               External Libs
-import path from "path";
-import fsp from "fs/promises";
 import { Ok } from "ts-results";
 import { Collection } from "discord.js";
 //#endregion
 //#region               Modules
-import read from "@/system/factories/fs/read.f";
-import string from "@/system/factories/string.f";
 import { prisma } from "//index";
 import { action as autoReportAction } from "//commands/mod/autoreport";
 //#endregion
