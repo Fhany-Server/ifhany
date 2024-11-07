@@ -130,8 +130,10 @@ const Default: Factory<types.VerifyFunctions> = () => {
             return Ok(message);
         },
         permissions: async (interaction) => {
-            const allowedIds = await new PermissionsHandler().AllowedRoles(
-                interaction.commandName
+
+            const allowedIds = await PermissionsHandler.AllowedRoles(
+                interaction.commandName,
+                interaction.guild?.id || "" //!DEV
             );
 
             if (typeof allowedIds.val === "boolean")
