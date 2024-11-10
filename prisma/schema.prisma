@@ -27,11 +27,11 @@ model User {
 // # -------------------------------------------------- #
 //                  Config
 model CommandPermissions {
-    commandName String
+    commandName String  @id @map("_id")
     allowed     String[] @default(["private"])
     minViewer   String @default("private")
 
-    guildId     String @id @default(uuid()) @map("_id")
+    guildId     String
     guild       Guild @relation(fields: [guildId], references: [id])
 }
 
