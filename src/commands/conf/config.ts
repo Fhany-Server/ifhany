@@ -2,12 +2,12 @@
 //#region               External Libs
 import { Ok } from "ts-results";
 import {
+    APIEmbed,
     AutocompleteInteraction,
     ChatInputCommandInteraction,
-    EmbedBuilder,
-    Guild,
     PermissionFlagsBits,
     SlashCommandBuilder,
+    SlashCommandSubcommandsOnlyBuilder,
 } from "discord.js";
 //#endregion
 //#region               Modules
@@ -18,14 +18,19 @@ import {
     Result,
 } from "@/system/handlers/errHandlers";
 import { types as commandTypes } from "@/system/handlers/command";
+import { EmbedMessagesHandler } from "//lib/external/handlers/embed";
+import { LOCALE, prisma } from "../..";
 //#endregion
 //#region               Typing
 export namespace types {
-    export type data = () => Promise<Ok<commandTypes.CommandData>>;
-    export type action = (
-        configEntry: string,
-        guildId: Guild
-    ) => Promise<Result<void>>;
+    export type data = () => Promise<
+        Ok<commandTypes.CommandData<SlashCommandSubcommandsOnlyBuilder>>
+    >;
+    export type subcommands = {
+        commandPermissions: (
+            interaction: ChatInputCommandInteraction
+        ) => Promise<Result<APIEmbed>>;
+    };
     export type execute = (
         interaction: ChatInputCommandInteraction
     ) => Promise<Result<void>>;
@@ -36,8 +41,9 @@ export namespace types {
 //#endregion
 //#region           Variables
 const commandName = "config";
+const commandLabel = "Configurações";
 export enum ConfigEntries {
-    commandAllowedRoles = "command-allowed-roles",
+    commandPermissions = "commandPermissions",
 }
 
 //#endregion
@@ -45,7 +51,13 @@ export enum ConfigEntries {
 export const data: types.data = async () => {
     const description = {
         comm: "Altere as configurações de algo!",
-        configEntry: "Qual é o nome da entrada que você quer modificar?",
+        commandAllowedRoles: {
+            comm: "Altere as permissões para um comando!",
+            command: "Você quer modificar as permissões de qual comando?",
+            allowList:
+                "Quais roles podem executar esse comando? Você também pode " +
+                "especificar 'private' ou 'public'",
+        },
         ephemeral: "Deseja que eu esconda essa mensagem?",
     };
 
@@ -57,27 +69,85 @@ export const data: types.data = async () => {
             .setName(commandName)
             .setDescription(description.comm)
             .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers)
-            .addNumberOption((configEntry) =>
-                configEntry
-                    .setName("config-entry")
-                    .setDescription(description.configEntry)
-                    .setRequired(true)
-            )
-            .addBooleanOption((ephemeral) =>
-                ephemeral
-                    .setName("ephemeral")
-                    .setDescription(description.ephemeral)
-                    .setRequired(false)
+            .addSubcommand((commandAllowedRoles) =>
+                commandAllowedRoles
+                    .setName("command-permissions")
+                    .setDescription(description.commandAllowedRoles.comm)
+                    .addStringOption((command) =>
+                        command
+                            .setName("command")
+                            .setDescription(
+                                description.commandAllowedRoles.command
+                            )
+                            .setRequired(true)
+                    )
+                    .addStringOption((allowList) =>
+                        allowList
+                            .setName("allow-list")
+                            .setDescription(
+                                description.commandAllowedRoles.allowList
+                            )
+                            .setRequired(true)
+                    )
+                    .addBooleanOption((ephemeral) =>
+                        ephemeral
+                            .setName("ephemeral")
+                            .setDescription(description.ephemeral)
+                            .setRequired(false)
+                    )
             ),
     });
 };
-export const action: types.action = async (configEntry, guild) => {
-    switch (configEntry) {
-        case ConfigEntries.commandAllowedRoles:
-            break;
-    }
+const subcommands: Factory<types.subcommands> = () => {
+    const factory: FactoryObj<types.subcommands> = {
+        commandPermissions: async (interaction) => {
+            const commandName = interaction.options.getString("command", true);
+            const allowList = interaction.options.getString("allow-list", true);
 
-    return Ok.EMPTY;
+            let allowed = [];
+
+            for (const substring of allowList.split(",")) {
+                if (substring === "private" || substring === "public") {
+                    allowed = [substring];
+
+                    break;
+                } else {
+                    const role = await interaction.guild?.roles.fetch(
+                        substring
+                    );
+
+                    if (role) {
+                        allowed.push(role.id);
+                    }
+                }
+            }
+
+            await prisma.commandPermissions.update({
+                where: {
+                    guildId: interaction.guild?.id,
+                    commandName,
+                },
+                data: {
+                    allowed,
+                },
+            });
+
+            const embed = await new EmbedMessagesHandler(
+                "info.simpleResponse"
+            ).Mount({
+                title: "Permissões de comando",
+                description:
+                    `As permissões de \`${commandName}\` ` +
+                    `foram alteradas para \`${allowList}\` com sucesso!`,
+                createdAt: interaction.createdAt.toLocaleString(LOCALE),
+                username: interaction.user.username,
+            });
+
+            return new Ok(embed.unwrap().data);
+        },
+    };
+
+    return factory;
 };
 export const execute: types.execute = async (interaction) => {
     if (interaction.guild === null)
@@ -89,15 +159,29 @@ export const execute: types.execute = async (interaction) => {
             origin: ErrorOrigin.Unknown,
         });
 
-    const configEntry = interaction.options.getString("config-entry", true);
+    const scomms = subcommands();
+    const subcommand = interaction.options.getSubcommand(true);
+
+    var response: Result<APIEmbed>;
     const getEphemeral = interaction.options.getBoolean("ephemeral");
+
     await interaction.deferReply({
         ephemeral: getEphemeral !== null ? getEphemeral : true,
     });
 
-    const result = (await action(configEntry, interaction.guild)).unwrap();
+    switch (subcommand) {
+        case "command-permissions":
+            response = await scomms.commandPermissions(interaction);
+            break;
+        default:
+            throw new BotErr({
+                message: "Nenhum subcomando foi atingido!",
+                origin: ErrorOrigin.Internal,
+                kind: ErrorKind.LogicError,
+            });
+    }
 
-    //await interaction.editReply({ embeds: [result.data] });
+    await interaction.editReply({ embeds: [response.unwrap()] });
 
     return Ok.EMPTY;
 };
