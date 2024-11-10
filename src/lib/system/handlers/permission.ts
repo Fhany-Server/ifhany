@@ -138,17 +138,9 @@ export class PermissionsHandler {
                 kind: ErrorKind.NotFound,
             });
 
-        if (typeof allowed === "string") {
-            if (allowed === "public") return Ok(true);
-            else if (allowed === "private") return Ok(false);
-            else {
-                return new BotErr({
-                    message: "The allowed property of the command is invalid!",
-                    origin: ErrorOrigin.Internal,
-                    kind: ErrorKind.InvalidValue,
-                });
-            }
-        } else if (Array.isArray(allowed)) {
+        if (allowed[0] === "public") return Ok(true);
+        else if (allowed[0] === "private") return Ok(false);
+        else {
             var roles = [];
             for (let i = 0; i < allowed.length; i++) {
                 const roleObj = await gld.roles.fetch(allowed[i]);
@@ -169,13 +161,6 @@ export class PermissionsHandler {
             }
 
             return new Ok(roles);
-        } else {
-            return new BotErr({
-                message:
-                    "The allowed property of the command is not a string or an array!",
-                origin: ErrorOrigin.Internal,
-                kind: ErrorKind.TypeError,
-            });
         }
     }
     //#endregion
@@ -187,7 +172,7 @@ export class PermissionsHandler {
      */
     public static async EnsureCommandsPermissions(
         guildId: Snowflake
-    ): Promise<Ok<void>> {
+    ): Promise<Result<void>> {
         const configs = await prisma.commandPermissions.findMany({
             where: {
                 guildId,
@@ -200,9 +185,12 @@ export class PermissionsHandler {
             );
 
             if (!hasCommand) {
-                prisma.commandPermissions.create({
+                await prisma.commandPermissions.create({
                     data: {
                         commandName: key,
+                        allowed: ["private"],
+                        minViewer: "private",
+                        guildId,
                     },
                 });
             }

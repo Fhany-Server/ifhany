@@ -51,7 +51,7 @@ const main = async (): Promise<Ok<void>> => {
 
     // Ensure the databases and their files
     {
-        await PermissionsHandler.EnsureCommandsPermissions(guild);
+        (await PermissionsHandler.EnsureCommandsPermissions(guild)).unwrap();
     }
     // Initializate listeners and other essential stuff
     {
