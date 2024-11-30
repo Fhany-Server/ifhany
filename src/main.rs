@@ -3,8 +3,7 @@ use dotenv::dotenv;
 use handlers::error::BotErr;
 use poise::serenity_prelude as serenity;
 
-use ::serenity::all::{ApplicationId, GuildId};
-use serenity::all::{ClientBuilder, GatewayIntents};
+use serenity::all::{ApplicationId, ClientBuilder, GatewayIntents, GuildId};
 use std::env;
 
 mod commands;
@@ -40,6 +39,15 @@ async fn main() {
             prefix_options: poise::PrefixFrameworkOptions {
                 prefix: Some("f.".to_string()),
                 ..Default::default()
+            },
+            event_handler: |ctx, event, _framework, _err| {
+                Box::pin(async move {
+                    let handler = handlers::event::Handler {};
+
+                    handler.match_event(ctx, event).await;
+
+                    Ok(())
+                })
             },
             ..Default::default()
         })
