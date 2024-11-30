@@ -126,3 +126,7 @@ configs.json
 
 scripts/personal
 config/default/permissions.json
+
+# Added by cargo
+
+/target
