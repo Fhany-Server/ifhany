@@ -3,8 +3,10 @@ use poise::Context;
 use crate::handlers::error::BotErr;
 
 #[poise::command(slash_command)]
-pub async fn execute(ctx: Context<'_, (), BotErr>) -> Result<(), BotErr> {
-    ctx.say("Pong!").await?;
+pub async fn ping(ctx: Context<'_, (), BotErr>) -> Result<(), BotErr> {
+    let ping = ctx.ping().await;
+
+    ctx.say(format!("The current gateway heartbeat is {}ms!", ping.as_millis())).await?;
 
     Ok(())
 }
