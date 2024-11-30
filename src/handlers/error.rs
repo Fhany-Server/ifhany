@@ -1,12 +1,12 @@
-use std::fmt::Display;
 use poise::serenity_prelude::Error as SerenityError;
+use std::fmt::Display;
 
 #[derive(Debug, Clone)]
 pub enum ErrorOrigin {
     User,
     Internal,
     External,
-    Unknown
+    Unknown,
 }
 
 #[derive(Debug, Clone)]
@@ -28,18 +28,21 @@ pub enum ErrorKind {
     SyntaxError,
     Other,
     TimeOut,
-    TypeError
+    TypeError,
 }
 
 #[derive(Debug, Clone)]
 pub struct BotError {
     pub message: String,
     pub origin: ErrorOrigin,
-    pub kind: ErrorKind
+    pub kind: ErrorKind,
 }
 
 pub trait Error: std::error::Error + Display {
     fn kind(&self) -> ErrorKind;
+    fn new(message: String, kind: ErrorKind, origin: ErrorOrigin) -> BotErr
+    where
+        Self: Sized;
 }
 
 impl Display for BotError {
@@ -54,6 +57,13 @@ impl Error for BotError {
     fn kind(&self) -> ErrorKind {
         self.kind.clone()
     }
+    fn new(message: String, kind: ErrorKind, origin: ErrorOrigin) -> BotErr {
+        Box::new(BotError {
+            message,
+            origin,
+            kind,
+        })
+    }
 }
 
 impl From<SerenityError> for BotErr {
@@ -61,7 +71,7 @@ impl From<SerenityError> for BotErr {
         Box::new(BotError {
             message: value.to_string(),
             origin: ErrorOrigin::Unknown,
-            kind: ErrorKind::Other
+            kind: ErrorKind::Other,
         })
     }
 }
