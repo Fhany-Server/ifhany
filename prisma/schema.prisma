@@ -1,5 +1,6 @@
 generator client {
-    provider = "prisma-client-js"
+    provider = "cargo run --bin prisma"
+    output = "../src/prisma.rs"
 }
 
 datasource db {
