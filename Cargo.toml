@@ -15,6 +15,5 @@ prisma-client-rust-cli = { git = "https://github.com/Brendonovich/prisma-client-
 dotenv = "0.15.0"
 tokio = "1.41.1"
 poise = "0.6.1"
-
-[alias]
-prisma = "run --bin prisma --"
+chrono = "0.4.38"
+strum_macros = "0.26.4"
