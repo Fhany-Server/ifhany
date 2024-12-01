@@ -4,13 +4,21 @@ use handlers::error::BotErr;
 use poise::serenity_prelude as serenity;
 
 use serenity::all::{ApplicationId, ClientBuilder, GatewayIntents, GuildId};
-use std::env;
+use std::{
+    env,
+    sync::Arc,
+};
+use tokio::sync::Mutex;
 
 mod commands;
 mod handlers;
+#[allow(warnings, unused)]
+mod prisma;
 mod utils;
 
-pub struct Data;
+pub struct BotData {
+    pub prisma: Arc<Mutex<prisma::PrismaClient>>,
+}
 
 #[tokio::main]
 async fn main() {
@@ -33,7 +41,11 @@ async fn main() {
     env::remove_var("TOKEN");
     env::remove_var("CLIENT_ID");
 
-    let framework: poise::Framework<(), BotErr> = poise::Framework::builder()
+    let prisma_client = Arc::new(Mutex::new(
+        prisma::PrismaClient::_builder().build().await.unwrap(),
+    ));
+
+    let framework = poise::Framework::<BotData, BotErr>::builder()
         .options(poise::FrameworkOptions {
             commands: commands::get_commands(),
             prefix_options: poise::PrefixFrameworkOptions {
@@ -53,7 +65,7 @@ async fn main() {
         })
         .setup(|ctx, _ready, framework| {
             Box::pin(async move {
-                poise::builtins::register_globally(ctx, &framework.options().commands).await?;
+                //poise::builtins::register_globally(ctx, &framework.options().commands).await?;
 
                 // dev
                 poise::builtins::register_in_guild(
@@ -63,17 +75,19 @@ async fn main() {
                 )
                 .await?;
 
-                Ok(())
+                Ok(BotData {
+                    prisma: prisma_client,
+                })
             })
         })
         .build();
 
-    let mut client = ClientBuilder::new(&token, intents)
+    let mut discord_client = ClientBuilder::new(&token, intents)
         .framework(framework)
         .application_id(app_id)
         .status(serenity::OnlineStatus::Online)
         .await
         .expect("Error creating client");
 
-    client.start().await.unwrap()
+    discord_client.start().await.unwrap()
 }

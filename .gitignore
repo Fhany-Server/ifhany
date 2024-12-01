@@ -130,3 +130,4 @@ config/default/permissions.json
 # Added by cargo
 
 /target
+/src/prisma.rs
