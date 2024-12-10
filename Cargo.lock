@@ -1472,6 +1472,7 @@ dependencies = [
  "poise",
  "prisma-client-rust",
  "prisma-client-rust-cli",
+ "regex",
  "serde",
  "serenity",
  "strum_macros",
