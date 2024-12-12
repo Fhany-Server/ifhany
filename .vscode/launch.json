@@ -69,6 +69,14 @@
             },
             "args": [],
             "cwd": "${workspaceFolder}",
+        },
+        {
+            "name": "Attach (Rust)",
+            "type": "lldb",
+            "request": "attach",
+            "pid": "${command:pickMyProcess}",
+            "program": "${workspaceFolder}/target/debug/ifhany",
+            "sourceLanguages": ["rust"]
         }
     ]
 }
