@@ -27,5 +27,7 @@ services:
             - ifhany_net
         depends_on:
             - database
+        security_opt:
+            - seccomp=unconfined
 volumes:
     ifhany_vol:
