@@ -14,6 +14,7 @@ mod commands;
 mod handlers;
 #[allow(warnings, unused)]
 mod prisma;
+mod tests;
 mod utils;
 
 pub struct BotData {

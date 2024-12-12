@@ -36,7 +36,6 @@ pub mod filter {
         );
     }
 }
-
 #[cfg(test)]
 pub mod verify {
     use crate::utils::{values::enums::EmojiFormat, verify::get_emoji_format};
@@ -58,5 +57,49 @@ pub mod verify {
         let emoji = "\u{2764}\u{FE0F}".to_string();
 
         assert_eq!(get_emoji_format(&emoji), EmojiFormat::Unicode);
+    }
+}
+#[cfg(test)]
+pub mod parse {
+    use crate::utils::parse::limit_to_milli;
+
+    #[test]
+    pub fn limit_basic_minutes_sum() {
+        assert_eq!(
+            limit_to_milli("1min".to_string()).unwrap(),
+            60000,
+            "Test simple conversion, 1min to 120000"
+        );
+
+        assert_eq!(
+            limit_to_milli("1min + 1min".to_string()).unwrap(),
+            120000,
+            "Test simple sum, 1min + 1min to 240000"
+        );
+    }
+    #[test]
+    pub fn limit_basic_sum_and_subtract() {
+        assert_eq!(
+            limit_to_milli("1min - 1min".to_string()).unwrap(),
+            0,
+            "Test simple subtraction, 1min - 1min to 0"
+        );
+
+        assert_eq!(
+            limit_to_milli("1min + 1min - 1min".to_string()).unwrap(),
+            60000,
+            "Test simple sum and subtraction, 1min + 1min - 1min to 60000"
+        );
+
+        assert_eq!(
+            limit_to_milli("1min - 1min + 1d".to_string()).unwrap(),
+            60000,
+            "Test inverted sum and subtraction, 1min - 1min + 1min to 60000"
+        );
+    }
+    #[test]
+    #[should_panic(expected = "attempt to subtract with overflow")]
+    pub fn limit_negative_case() {
+        limit_to_milli("1min - 2min".to_string()).unwrap();
     }
 }
