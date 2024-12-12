@@ -13,9 +13,6 @@ import {
 // * Modules
 import { PermissionsHandler } from "@/system/handlers/permission";
 
-// * Typing
-import { types as filterTypes } from "@/system/factories/filter.f";
-
 export namespace types {
     export interface VerifyFunctions {
         /**
@@ -30,17 +27,6 @@ export namespace types {
             interaction: Interaction,
             emoji: string
         ) => Ok<boolean>;
-        /**
-         * Verify what kind of emoji is used.
-         * @param emoji Emoji to be verified.
-         * @example
-         * const emoji = "<:emoji:123456789>"
-         * const emojiFormat = verify.emojiFormat(emoji).val
-         *
-         * console.log(emojiFormat)
-         * // "custom"
-         */
-        emojiFormat: (emoji: string) => Ok<filterTypes.EmojiFormat>;
         /**
          * Verify if a message has a certain length.
          *
@@ -101,21 +87,6 @@ const Default: Factory<types.VerifyFunctions> = () => {
             const searchEmoji = interaction.client.emojis.cache.find(emojiFind);
 
             if (searchEmoji) return Ok(true);
-            else return Ok(false);
-        },
-        emojiFormat: (emoji) => {
-            const emojiTest = /<:[a-zA-Z_]+:\d+>/.test(emoji);
-            const unicodeTestString =
-                "(\\u00a9|\\u00ae|[\\u2000-\\u3300]|" +
-                "\\ud83c[\\ud000-\\udfff]|" +
-                "\\ud83d[\\ud000-\\udfff]|" +
-                "\\ud83e[\\ud000-\\udfff])";
-            const emojiUnicodeTest = new RegExp(unicodeTestString, "g").test(
-                emoji
-            );
-
-            if (emojiUnicodeTest) return Ok("unicode");
-            else if (emojiTest) return Ok("custom");
             else return Ok(false);
         },
         messageLenght: async function (message, repeatFn?) {
