@@ -4,10 +4,7 @@ use handlers::error::BotErr;
 use poise::serenity_prelude as serenity;
 
 use serenity::all::{ApplicationId, ClientBuilder, GatewayIntents, GuildId};
-use std::{
-    env,
-    sync::Arc,
-};
+use std::{env, sync::Arc};
 use tokio::sync::Mutex;
 
 mod commands;
@@ -20,6 +17,8 @@ mod utils;
 pub struct BotData {
     pub prisma: Arc<Mutex<prisma::PrismaClient>>,
 }
+
+rust_i18n::i18n!();
 
 #[tokio::main]
 async fn main() {

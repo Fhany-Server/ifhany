@@ -1,0 +1,9 @@
+syntax.limit.end_operators:
+    en: "You are using operators in the end of the `limit` parameter!"
+syntax.limit.unit_syntax_err:
+    en: "Something between the operators is wrong, verify it!"
+syntax.limit.invalid_unit_match:
+    en: "The unit doesn't match the limit part!"
+
+use.kick.only_server:
+    en: 
