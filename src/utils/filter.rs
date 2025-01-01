@@ -50,7 +50,7 @@ pub fn extract_emoji(emoji: &String) -> Result<ExtractedEmoji, BotErr> {
     }
 
     Err(BotError::new(
-        "This is not an emoji!".to_string(),
+        t!("syntax.emoji.is_not").to_string(),
         ErrorKind::InvalidValue,
         ErrorOrigin::User
     ))

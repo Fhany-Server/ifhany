@@ -50,18 +50,20 @@ pub async fn action(
 #[poise::command(slash_command)]
 pub async fn kick(
     ctx: Context<'_, BotData, BotErr>,
-    #[description = "Who do you want to kick?"] user: User,
-    #[description = "What is the reason?"] reason: String,
-    #[description = "Do you want to hide this message?"] ephemeral: Option<bool>,
+    user: User,
+    reason: String,
+    ephemeral: Option<
+        bool,
+    >,
 ) -> Result<(), BotErr> {
     utils::matchs::ephemeral(&ctx, ephemeral).await?;
 
     let guild_id =
-        utils::matchs::required_guild_id(&ctx, "This command can only be used in a server").await?;
+        utils::matchs::required_guild_id(&ctx, t!("use.command.only_server").to_string().as_str()).await?;
 
     action(ctx, guild_id, user, reason.to_string()).await?;
 
-    ctx.say("User has been kicked!").await?;
+    ctx.say(t!("reply.kick.success")).await?;
 
     Ok(())
 }

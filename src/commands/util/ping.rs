@@ -7,7 +7,11 @@ use crate::{handlers::error::BotErr, BotData};
 pub async fn ping(ctx: Context<'_, BotData, BotErr>) -> Result<(), BotErr> {
     let ping = ctx.ping().await;
 
-    ctx.say(format!("The current gateway heartbeat is {}ms!", ping.as_millis())).await?;
+    ctx.say(t!(
+        "log.current.gateway_heartbeat",
+        heartbeat = ping.as_millis().to_string()
+    ))
+    .await?;
 
     Ok(())
 }

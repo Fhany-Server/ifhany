@@ -71,7 +71,7 @@ pub fn limit_to_milli(mut limit: String) -> Result<u64, BotErr> {
             limit_parts.push(limit[last_index..limit_len].to_string())
         } else {
             return Err(BotError::new(
-                "You're using operators in the end of the `limit` parameter!".to_string(),
+                t!("syntax.limit.end_operators").to_string(),
                 ErrorKind::SyntaxError,
                 ErrorOrigin::User,
             ));
@@ -87,7 +87,7 @@ pub fn limit_to_milli(mut limit: String) -> Result<u64, BotErr> {
                 operations_in_milli.push(limit_part.to_string());
             } else {
                 let wrong_unit_syntax_err = BotError::new(
-                    "Something between the operators is wrong, verify it!".to_string(),
+                    t!("syntax.limit.unit_syntax_err").to_string(),
                     ErrorKind::SyntaxError,
                     ErrorOrigin::User,
                 );
@@ -104,7 +104,7 @@ pub fn limit_to_milli(mut limit: String) -> Result<u64, BotErr> {
 
                     if limit_part != unit_parts.get(0).unwrap().as_str() {
                         return Err(BotError::new(
-                            "The unit doesn't match the limit part!".to_string(),
+                            t!("syntax.limit.invalid_unit_match").to_string(),
                             ErrorKind::SyntaxError,
                             ErrorOrigin::User,
                         ));
