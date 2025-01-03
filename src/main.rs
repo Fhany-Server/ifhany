@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate rust_i18n;
+
 use dotenv::dotenv;
 
 use handlers::error::BotErr;
@@ -45,9 +48,12 @@ async fn main() {
         prisma::PrismaClient::_builder().build().await.unwrap(),
     ));
 
+    let get_commands = commands::get_commands();
+    let commands = handlers::i18n::I18nHandler::internationalize_slash(get_commands);
+
     let framework = poise::Framework::<BotData, BotErr>::builder()
         .options(poise::FrameworkOptions {
-            commands: commands::get_commands(),
+            commands,
             prefix_options: poise::PrefixFrameworkOptions {
                 prefix: Some("f.".to_string()),
                 ..Default::default()
