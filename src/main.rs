@@ -21,6 +21,8 @@ pub struct BotData {
     pub prisma: Arc<Mutex<prisma::PrismaClient>>,
 }
 
+pub type Context<'a> = poise::Context<'a, BotData, BotErr>;
+
 rust_i18n::i18n!();
 
 #[tokio::main]
